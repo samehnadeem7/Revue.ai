@@ -9,8 +9,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# Constants
-API_URL = "https://revue-ai.onrender.com/"
+# Constants - Update this with your actual Render backend URL
+# Replace this with your actual Render backend URL from your dashboard
+API_URL = "https://revue-ai.onrender.com/"  # Update this!
+
+# For local testing, use: API_URL = "http://localhost:8000"
 
 def main():
     st.title("🚀 Startup Document Analyzer")
@@ -59,7 +62,15 @@ def main():
                         else:
                             st.error(f"Error: {response.text}")
                     except requests.exceptions.ConnectionError:
-                        st.error("Failed to connect to the analysis server!")
+                        st.error("❌ Failed to connect to the backend server!")
+                        st.info("🔧 Please check:")
+                        st.info("1. Your Render backend URL is correct")
+                        st.info("2. The backend service is running")
+                        st.info("3. CORS is properly configured")
+                    except Exception as e:
+                        st.error(f"❌ Error: {str(e)}")
+                        st.info("🔧 Current API URL: " + API_URL)
+                        st.info("💡 Try updating the API_URL in the code with your actual Render backend URL")
 
         # Show document guidelines
         with st.expander("📋 Document Guidelines"):
