@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 # Constants
-API_URL = "http://localhost:8000"
+API_URL = "https://revue-ai.onrender.com/"
 
 def main():
     st.title("🚀 Startup Document Analyzer")
