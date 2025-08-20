@@ -43,8 +43,20 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Database setup
 def get_db_connection():
-    """Get database connection"""
-    return psycopg2.connect(DATABASE_URL)
+    """Get database connection with optimized pool settings"""
+    return psycopg2.connect(
+        DATABASE_URL,
+        # Connection pooling settings
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=5,
+        # Timeout settings
+        connect_timeout=10,
+        options='-c statement_timeout=30000',  # 30 seconds
+        # Connection settings
+        application_name='startup-analyzer-api'
+    )
 
 def init_db():
     """Initialize PostgreSQL database"""
