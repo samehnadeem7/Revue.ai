@@ -9,6 +9,6 @@ services:
       pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: GOOGLE_API_KEY
-        value: "AIzaSyBRcWEkmYWPT3H7cbLh15t42bkUi1DGhoU"
+  - key: OPENAI_API_KEY
+    value: "your-openai-api-key-here"
     healthCheckPath: /health

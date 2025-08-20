@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 import fitz  # PyMuPDF library
-import google.generativeai as genai
+import openai
 from dotenv import load_dotenv
 from typing import Dict, List, Tuple
 import re
@@ -31,11 +31,11 @@ app.add_middleware(
 # Load environment variables
 load_dotenv()
 
-# Configure Gemini API
-api_key = os.getenv("GOOGLE_API_KEY")
+# Configure OpenAI API
+api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    raise ValueError("GOOGLE_API_KEY not found in environment variables")
-genai.configure(api_key=api_key)
+    raise ValueError("OPENAI_API_KEY not found in environment variables")
+openai.api_key = api_key
 
 # Create uploads directory
 UPLOAD_DIR = "uploads"
@@ -395,81 +395,256 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
     # Use detected type or fallback to comprehensive analysis
     prompt_type = detected_type if detected_type in analysis_prompts else "Startup Document"
     
-    # Enhanced RAG implementation with better error handling
-    def chunk_text(input_text: str, max_chars: int = 1500) -> List[str]:
-        paragraphs = re.split(r"\n\s*\n", input_text)
-        chunks: List[str] = []
-        current: List[str] = []
-        current_len = 0
-        for para in paragraphs:
-            para = para.strip()
-            if not para:
-                continue
-            if current_len + len(para) + 1 > max_chars and current:
-                chunks.append("\n".join(current))
-                current = [para]
-                current_len = len(para)
-            else:
-                current.append(para)
-                current_len += len(para) + 1
-        if current:
-            chunks.append("\n".join(current))
-        # Fallback if text was not separable
-        if not chunks:
-            for i in range(0, len(input_text), max_chars):
-                chunks.append(input_text[i:i + max_chars])
-        return chunks
+    # Template-based fallback analysis (when API is unavailable)
+    def get_fallback_analysis(doc_type: str, content: str) -> str:
+        """Provide template-based analysis when AI API is unavailable"""
+        
+        if doc_type == "Google Forms Feedback":
+            return f"""
+# 📊 Google Forms Analysis Report
 
-    def embed_text(content: str) -> np.ndarray:
-        last_error: Exception | None = None
-        for model_name in ["models/text-embedding-004", "text-embedding-004"]:
-            try:
-                resp = genai.embed_content(model=model_name, content=content)
-                # SDK may return dict-like or object with .embedding.values
-                if isinstance(resp, dict):
-                    emb = resp.get("embedding")
-                else:
-                    emb = getattr(resp, "embedding", None)
-                if isinstance(emb, dict) and "values" in emb:
-                    return np.array(emb["values"], dtype=float)
-                if isinstance(emb, list):
-                    return np.array(emb, dtype=float)
-                # Some SDK versions nest under resp["embeddings"][0]["values"]
-                embeddings = resp.get("embeddings") if isinstance(resp, dict) else None
-                if embeddings and isinstance(embeddings, list) and embeddings[0].get("values"):
-                    return np.array(embeddings[0]["values"], dtype=float)
-            except Exception as e:
-                last_error = e
-        raise last_error or RuntimeError("Failed to get embedding")
+## 🔍 FORM OVERVIEW
+- **Document Type**: Google Forms Feedback
+- **Content Length**: {len(content)} characters
+- **Analysis Method**: Template-based (API unavailable)
 
-    def cosine_similarity(matrix: np.ndarray, vector: np.ndarray) -> np.ndarray:
-        vector_norm = np.linalg.norm(vector) + 1e-10
-        matrix_norms = np.linalg.norm(matrix, axis=1) + 1e-10
-        return (matrix @ vector) / (matrix_norms * vector_norm)
+## 📈 CUSTOMER INSIGHTS OVERVIEW
+Based on the form structure and typical Google Forms patterns, here are the expected insights for startup growth.
 
-    def parse_section_queries(prompt_text: str) -> List[str]:
-        lines = [line.strip() for line in prompt_text.strip().split("\n")]
-        queries: List[str] = []
-        for line in lines:
-            # Capture numbered headings like 1., 4.1, 4.1. etc.
-            if re.match(r"^\d+(?:\.\d+)*\.?\s+", line):
-                clean = re.sub(r"^\d+(?:\.\d+)*\.?\s+", "", line)
-                if clean:
-                    queries.append(clean)
-        # Fallback if parsing fails
-        if not queries:
-            queries = [
-                "Document Overview",
-                "Business Relevance",
-                "Key Insights",
-                "Market Analysis",
-                "Growth Opportunities",
-                "Action Items",
-                "Final Growth Strategy",
-            ]
-        return queries
+## 🎯 FEEDBACK PATTERNS & TRENDS
+- **Form Engagement**: Analyze response completion rates
+- **Response Quality**: Monitor answer depth and detail
+- **Time Patterns**: Identify peak response times
 
+## 🚀 PRODUCT/MARKET FIT ANALYSIS
+- **Customer Needs**: Extract pain points and desires
+- **Market Validation**: Assess product-market fit signals
+- **Segment Preferences**: Identify target customer groups
+
+## ⚡ IMPROVEMENT PRIORITIES
+- **High-Impact Changes**: Focus on customer-requested features
+- **Critical Issues**: Address immediate pain points
+- **Long-term Strategy**: Plan for sustainable growth
+
+## 💡 CUSTOMER SENTIMENT ANALYSIS
+- **Overall Satisfaction**: Track sentiment trends
+- **Emotional Triggers**: Identify what drives engagement
+- **Brand Perception**: Monitor customer brand sentiment
+
+## 🏆 COMPETITIVE ADVANTAGE OPPORTUNITIES
+- **Unique Features**: Highlight differentiation points
+- **Market Gaps**: Identify underserved customer needs
+- **Positioning**: Strengthen competitive positioning
+
+## 📊 GROWTH STRATEGY & SCALING
+- **Customer Acquisition**: Optimize acquisition channels
+- **Retention**: Improve customer loyalty strategies
+- **Expansion**: Identify new market opportunities
+
+## 🎯 FINAL GROWTH STRATEGY
+1. **Immediate Actions** (Next 30 days)
+   - Analyze form responses for quick wins
+   - Implement high-impact improvements
+   - Set up response monitoring
+
+2. **Short-term Goals** (3-6 months)
+   - Optimize form structure based on feedback
+   - Implement customer-requested features
+   - Establish feedback collection processes
+
+3. **Long-term Vision** (6-12 months)
+   - Scale successful feedback mechanisms
+   - Expand to new customer segments
+   - Build data-driven decision culture
+
+---
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your Google API key has available quota.*
+            """
+        
+        elif doc_type == "Startup Document":
+            return f"""
+# 🚀 Startup Document Analysis Report
+
+## 🔍 DOCUMENT OVERVIEW
+- **Document Type**: Startup Document
+- **Content Length**: {len(content)} characters
+- **Analysis Method**: Template-based (API unavailable)
+
+## 📊 EXECUTIVE SUMMARY
+This startup document has been analyzed for key growth indicators and strategic insights.
+
+## 💎 VALUE PROPOSITION & COMPETITIVE ADVANTAGE
+- **Unique Selling Points**: Identify what makes this startup stand out
+- **Competitive Analysis**: Assess differentiation from competitors
+- **Market Positioning**: Evaluate strategic market position
+
+## 🌍 MARKET OPPORTUNITY
+- **Market Size**: Assess TAM, SAM, SOM potential
+- **Growth Trends**: Identify market growth drivers
+- **Target Segments**: Define primary customer groups
+
+## 💰 BUSINESS MODEL & REVENUE
+- **Revenue Streams**: Analyze multiple income sources
+- **Unit Economics**: Evaluate LTV, CAC, and margins
+- **Scalability**: Assess growth potential
+
+## 🏆 COMPETITIVE LANDSCAPE
+- **Competitor Analysis**: Identify key competitors
+- **Advantage Assessment**: Evaluate competitive strengths
+- **Market Entry**: Assess entry barriers and timing
+
+## 📈 FINANCIAL PROJECTIONS
+- **Revenue Forecasts**: Review 3-5 year projections
+- **Growth Metrics**: Analyze monthly/quarterly trends
+- **Key Ratios**: Evaluate financial health indicators
+
+## 👥 TEAM & EXECUTION
+- **Team Strengths**: Assess execution capabilities
+- **Experience Relevance**: Evaluate industry expertise
+- **Resource Allocation**: Review team structure
+
+## 💼 INVESTMENT & FUNDING
+- **Funding Requirements**: Assess capital needs
+- **Use of Funds**: Review allocation strategy
+- **Milestone Planning**: Define funding milestones
+
+## ⚠️ RISK ASSESSMENT
+- **Key Risks**: Identify primary risk factors
+- **Mitigation Strategies**: Review risk management
+- **Contingency Planning**: Assess backup plans
+
+## 🎯 FINAL GROWTH STRATEGY
+1. **Immediate Actions** (Next 30 days)
+   - Validate key assumptions
+   - Secure initial customer feedback
+   - Establish key metrics tracking
+
+2. **Short-term Goals** (3-6 months)
+   - Achieve product-market fit
+   - Build initial customer base
+   - Establish operational processes
+
+3. **Long-term Vision** (6-12 months)
+   - Scale successful operations
+   - Expand market presence
+   - Prepare for funding rounds
+
+---
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your Google API key has available quota.*
+            """
+        
+        else:
+            return f"""
+# 📄 Document Analysis Report
+
+## 🔍 DOCUMENT OVERVIEW
+- **Document Type**: {doc_type}
+- **Content Length**: {len(content)} characters
+- **Analysis Method**: Template-based (API unavailable)
+
+## 📊 BUSINESS RELEVANCE ASSESSMENT
+This document has been analyzed for startup and business relevance.
+
+## 🎯 KEY INSIGHTS
+- **Content Quality**: Assess information completeness
+- **Business Value**: Identify actionable insights
+- **Strategic Implications**: Evaluate business impact
+
+## 🚀 GROWTH OPPORTUNITIES
+- **Market Insights**: Extract market intelligence
+- **Customer Understanding**: Identify customer needs
+- **Competitive Intelligence**: Assess market positioning
+
+## 📈 ACTION ITEMS
+- **Immediate Actions**: Quick wins and improvements
+- **Strategic Planning**: Long-term growth initiatives
+- **Resource Allocation**: Optimize resource usage
+
+## 🎯 FINAL GROWTH STRATEGY
+1. **Quick Wins** (Next 2 weeks)
+   - Implement immediate improvements
+   - Address low-hanging opportunities
+   - Set up monitoring systems
+
+2. **Strategic Initiatives** (1-3 months)
+   - Develop comprehensive growth plan
+   - Align team and resources
+   - Establish success metrics
+
+3. **Long-term Vision** (3-12 months)
+   - Scale successful strategies
+   - Expand market presence
+   - Build sustainable competitive advantage
+
+---
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your Google API key has available quota.*
+            """
+
+    # Try AI analysis first, fallback to template if API fails
     try:
+        # Enhanced RAG implementation with better error handling
+        def chunk_text(input_text: str, max_chars: int = 1500) -> List[str]:
+            paragraphs = re.split(r"\n\s*\n", input_text)
+            chunks: List[str] = []
+            current: List[str] = []
+            current_len = 0
+            for para in paragraphs:
+                para = para.strip()
+                if not para:
+                    continue
+                if current_len + len(para) + 1 > max_chars and current:
+                    chunks.append("\n".join(current))
+                    current = [para]
+                    current_len = len(para)
+                else:
+                    current.append(para)
+                    current_len += len(para) + 1
+            if current:
+                chunks.append("\n".join(current))
+            # Fallback if text was not separable
+            if not chunks:
+                for i in range(0, len(input_text), max_chars):
+                    chunks.append(input_text[i:i + max_chars])
+            return chunks
+
+        def embed_text(content: str) -> np.ndarray:
+            try:
+                response = openai.Embedding.create(
+                    model="text-embedding-ada-002",
+                    input=content
+                )
+                embedding = response['data'][0]['embedding']
+                return np.array(embedding, dtype=float)
+            except Exception as e:
+                raise RuntimeError(f"Failed to get embedding: {str(e)}")
+
+        def cosine_similarity(matrix: np.ndarray, vector: np.ndarray) -> np.ndarray:
+            vector_norm = np.linalg.norm(vector) + 1e-10
+            matrix_norms = np.linalg.norm(matrix, axis=1) + 1e-10
+            return (matrix @ vector) / (matrix_norms * vector_norm)
+
+        def parse_section_queries(prompt_text: str) -> List[str]:
+            lines = [line.strip() for line in prompt_text.strip().split("\n")]
+            queries: List[str] = []
+            for line in lines:
+                # Capture numbered headings like 1., 4.1, 4.1. etc.
+                if re.match(r"^\d+(?:\.\d+)*\.?\s+", line):
+                    clean = re.sub(r"^\d+(?:\.\d+)*\.?\s+", "", line)
+                    if clean:
+                        queries.append(clean)
+            # Fallback if parsing fails
+            if not queries:
+                queries = [
+                    "Document Overview",
+                    "Business Relevance",
+                    "Key Insights",
+                    "Market Analysis",
+                    "Growth Opportunities",
+                    "Action Items",
+                    "Final Growth Strategy",
+                ]
+            return queries
+
         # Build RAG store: chunk -> embedding
         chunks = chunk_text(text, max_chars=1500)
         chunk_embeddings = []
@@ -489,9 +664,11 @@ Document Content:
 
 {analysis_prompts.get(prompt_type, analysis_prompts["Startup Document"]) }
 """
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            response = model.generate_content(business_analyst_prompt, generation_config={"temperature": 0.9})
-            return {"analysis": response.text}
+            model = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": business_analyst_prompt}]
+            )
+            return {"analysis": model.choices[0].message.content}
 
         embeddings_matrix = np.vstack(chunk_embeddings)
 
@@ -535,11 +712,23 @@ Task:
 {analysis_prompts.get(prompt_type, list(analysis_prompts.values())[0]) }
 """
 
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt, generation_config={"temperature": 0.9})
-        return {"analysis": response.text}
+        model = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return {"analysis": model.choices[0].message.content}
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # If AI analysis fails (rate limit, API error, etc.), use template fallback
+        error_msg = str(e)
+        if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
+            # API rate limit hit - use template analysis
+            fallback_analysis = get_fallback_analysis(detected_type, text)
+            return {"analysis": fallback_analysis, "api_status": "rate_limited", "fallback": True}
+        else:
+            # Other API error - still use template but indicate the issue
+            fallback_analysis = get_fallback_analysis(detected_type, text)
+            return {"analysis": fallback_analysis, "api_status": "error", "fallback": True, "error": error_msg}
 
 @app.post("/upload-pdf/")
 async def upload_pdf(

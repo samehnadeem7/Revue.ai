@@ -58,6 +58,13 @@ if page == "Upload & Analyze":
                     if response.status_code == 200:
                         result = response.json()
                         
+                        # Check if using fallback mode
+                        if result.get("fallback"):
+                            if result.get("api_status") == "rate_limited":
+                                st.warning("⚠️ **API Rate Limit Reached** - Using template analysis. For full AI insights, check your Google API quota.")
+                            else:
+                                st.warning("⚠️ **API Error** - Using template analysis. For full AI insights, check your API configuration.")
+                        
                         st.success("✅ Analysis completed successfully!")
                         
                         # Display results
@@ -71,6 +78,10 @@ if page == "Upload & Analyze":
                         # Display analysis
                         st.subheader("📊 AI Analysis Results")
                         st.markdown(result["analysis"])
+                        
+                        # Show API status if available
+                        if result.get("api_status"):
+                            st.info(f"**API Status**: {result['api_status']}")
                         
                     else:
                         st.error(f"❌ Error: {response.text}")
