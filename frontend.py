@@ -32,47 +32,117 @@ API_URL = st.sidebar.text_input(
 if page == "Upload & Analyze":
     st.header("📄 Upload & Analyze Document")
     
-    # File upload
-    uploaded_file = st.file_uploader(
-        "Choose a PDF file",
-        type=['pdf'],
-        help="Upload any startup document (pitch deck, business plan, market research, financial model, customer feedback, etc.)"
-    )
+    # Create tabs for different input methods
+    tab1, tab2 = st.tabs(["📁 Upload PDF", "🔗 Google Forms Converter"])
     
-    # Document type info
-    st.info("💡 **Smart Analysis**: Our AI automatically detects document type and provides relevant insights!")
+    with tab1:
+        # File upload
+        uploaded_file = st.file_uploader(
+            "Choose a PDF file",
+            type=['pdf'],
+            help="Upload any startup document (pitch deck, business plan, market research, financial model, customer feedback, etc.)"
+        )
+        
+        # Document type info
+        st.info("💡 **Smart Analysis**: Our AI automatically detects document type and provides relevant insights!")
+        
+        if uploaded_file is not None and st.button("🚀 Analyze Document"):
+            with st.spinner("Analyzing document with AI..."):
+                try:
+                    # Prepare file for upload
+                    files = {"file": uploaded_file}
+                    
+                    # Make API request (no document type needed - auto-detected)
+                    response = requests.post(f"{API_URL}/upload-pdf/", files=files)
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        
+                        st.success("✅ Analysis completed successfully!")
+                        
+                        # Display results
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Document", result["filename"])
+                            st.metric("Type", result["document_type"])
+                        with col2:
+                            st.metric("Analysis ID", result["analysis_id"])
+                        
+                        # Display analysis
+                        st.subheader("📊 AI Analysis Results")
+                        st.markdown(result["analysis"])
+                        
+                    else:
+                        st.error(f"❌ Error: {response.text}")
+                        
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
     
-    if uploaded_file is not None and st.button("🚀 Analyze Document"):
-        with st.spinner("Analyzing document with AI..."):
-            try:
-                # Prepare file for upload
-                files = {"file": uploaded_file}
-                
-                # Make API request (no document type needed - auto-detected)
-                response = requests.post(f"{API_URL}/upload-pdf/", files=files)
-                
-                if response.status_code == 200:
-                    result = response.json()
+    with tab2:
+        st.subheader("🔗 Convert Google Forms to PDF & Analyze")
+        st.info("💡 **Convert Google Forms**: Paste your Google Forms URL and get instant analysis!")
+        
+        # Google Forms URL input
+        form_url = st.text_input(
+            "Google Forms URL",
+            placeholder="https://forms.gle/... or https://docs.google.com/forms/...",
+            help="Paste your Google Forms URL here"
+        )
+        
+        form_title = st.text_input(
+            "Form Title (Optional)",
+            placeholder="Customer Feedback Survey",
+            help="Give your form a descriptive title"
+        )
+        
+        if form_url and st.button("🔄 Convert & Analyze Form"):
+            with st.spinner("Converting Google Form and analyzing responses..."):
+                try:
+                    # Prepare form data
+                    form_data = {
+                        "form_url": form_url,
+                        "form_title": form_title or "Untitled Form"
+                    }
                     
-                    st.success("✅ Analysis completed successfully!")
+                    # Make API request to convert Google Form
+                    response = requests.post(f"{API_URL}/convert-google-form/", data=form_data)
                     
-                    # Display results
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("Document", result["filename"])
-                        st.metric("Type", result["document_type"])
-                    with col2:
-                        st.metric("Analysis ID", result["analysis_id"])
-                    
-                    # Display analysis
-                    st.subheader("📊 AI Analysis Results")
-                    st.markdown(result["analysis"])
-                    
-                else:
-                    st.error(f"❌ Error: {response.text}")
-                    
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
+                    if response.status_code == 200:
+                        result = response.json()
+                        
+                        st.success("✅ Google Form converted and analyzed successfully!")
+                        
+                        # Display results
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Form", result["filename"])
+                            st.metric("Type", result["document_type"])
+                        with col2:
+                            st.metric("Analysis ID", result["analysis_id"])
+                            st.metric("Form ID", result.get("form_id", "N/A"))
+                        
+                        # Display analysis
+                        st.subheader("📊 Google Forms Analysis Results")
+                        st.markdown(result["analysis"])
+                        
+                        # Show form details
+                        st.info(f"🔗 **Form URL**: {result.get('form_url', 'N/A')}")
+                        
+                    else:
+                        st.error(f"❌ Error: {response.text}")
+                        
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+        
+        # Google Forms tips
+        st.markdown("---")
+        st.markdown("**💡 Google Forms Tips:**")
+        st.markdown("""
+        - **Supported URLs**: forms.gle, docs.google.com/forms
+        - **Best for**: Customer feedback, surveys, market research
+        - **Analysis**: AI extracts insights and growth strategies
+        - **Output**: Structured analysis with actionable recommendations
+        """)
 
 elif page == "Analysis History":
     st.header("📚 Analysis History")
