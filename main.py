@@ -123,32 +123,35 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
         
         return "Unknown Document"
 
-    # Validate document content for startup analysis
+    # Validate document content for startup analysis - More robust approach
     def validate_startup_content(text: str) -> bool:
         text_lower = text.lower()
         
-        # Minimum content requirements
-        if len(text.strip()) < 100:
+        # Minimum content requirements - more lenient
+        if len(text.strip()) < 50:
             return False
         
-        # Check for business-related content
+        # Check for business-related content - broader scope
         business_indicators = [
             "business", "company", "startup", "product", "service", "market", "customer", 
-            "revenue", "strategy", "plan", "goal", "objective", "target", "growth"
+            "revenue", "strategy", "plan", "goal", "objective", "target", "growth",
+            "feedback", "survey", "form", "response", "opinion", "suggestion", "improvement",
+            "experience", "hackathon", "event", "participant", "user", "client", "feedback",
+            "analysis", "research", "data", "insight", "trend", "opportunity", "challenge"
         ]
         
         business_score = sum(1 for indicator in business_indicators if indicator in text_lower)
         
-        # Check for random/gibberish content
+        # Check for random/gibberish content - more specific
         random_indicators = [
             "lorem ipsum", "random text", "test document", "sample text", "placeholder",
-            "asdf", "qwerty", "123456", "abcdef"
+            "asdf", "qwerty", "123456", "abcdef", "zzzzzz", "xxxxxx", "yyyyyy"
         ]
         
         random_score = sum(1 for indicator in random_indicators if indicator in text_lower)
         
-        # Document is valid if it has business content and minimal random content
-        return business_score >= 3 and random_score < 2
+        # More lenient validation - accept if minimal business content and very low random content
+        return business_score >= 1 and random_score < 3
 
     # Auto-detect document type
     detected_type = detect_document_type(text)
@@ -157,7 +160,7 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
     if not validate_startup_content(text):
         raise HTTPException(
             status_code=400, 
-            detail="Document content is not suitable for startup analysis. Please upload a business-related document (pitch deck, business plan, market research, financial model, or customer feedback)."
+            detail="Document content appears to be unrelated to business, feedback, or startup analysis. Please upload a document with business content, customer feedback, or startup-related information."
         )
 
     analysis_prompts = {
@@ -659,6 +662,8 @@ This document has been analyzed for startup and business relevance.
             business_analyst_prompt = f"""
 You are a seasoned startup analyst and business consultant. Provide structured, practical insights with bullet points, citing specific evidence from the document when possible. If information is missing, state "Not found". Focus on actionable growth strategies.
 
+IMPORTANT: Write in a professional, business-focused tone. Use minimal emojis and maintain a formal yet accessible style suitable for startup founders and investors.
+
 Document Content:
 {text}
 
@@ -698,6 +703,8 @@ Document Content:
         # Compose final prompt with RAG context and startup-analyst persona
         prompt = f"""
 You are a seasoned startup analyst and business consultant with 15+ years of experience. Using ONLY the provided RAG Context, produce a concise, structured analysis with clear section headers and bullet points where helpful. If a section lacks evidence in the RAG Context, write "Not found" for that section. Do not invent facts.
+
+IMPORTANT: Write in a professional, business-focused tone. Use minimal emojis and maintain a formal yet accessible style suitable for startup founders and investors.
 
 Focus on ACTIONABLE insights that help founders:
 1. Scale their startup

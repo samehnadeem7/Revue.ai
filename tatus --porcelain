@@ -1,0 +1,13 @@
+[1mdiff --git a/frontend.py b/frontend.py[m
+[1mindex a9aa6df..2c4d734 100644[m
+[1m--- a/frontend.py[m
+[1m+++ b/frontend.py[m
+[36m@@ -25,7 +25,7 @@[m [mpage = st.sidebar.selectbox([m
+ # API endpoint - can be changed for deployment[m
+ API_URL = st.sidebar.text_input([m
+     "API URL", [m
+[31m-    value="https://revue-ai-1.onrender.com",[m
+[32m+[m[32m    value="https://revue-ai-2.onrender.com",[m
+     help="Enter the URL of your FastAPI backend"[m
+ )[m
+ [m
