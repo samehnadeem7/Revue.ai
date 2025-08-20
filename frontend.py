@@ -61,7 +61,7 @@ if page == "Upload & Analyze":
                         # Check if using fallback mode
                         if result.get("fallback"):
                             if result.get("api_status") == "rate_limited":
-                                st.warning("⚠️ **API Rate Limit Reached** - Using template analysis. For full AI insights, check your Google API quota.")
+                                st.warning("⚠️ **API Rate Limit Reached** - Using template analysis. For full AI insights, check your OpenAI API quota.")
                             else:
                                 st.warning("⚠️ **API Error** - Using template analysis. For full AI insights, check your API configuration.")
                         
