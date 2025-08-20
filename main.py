@@ -43,7 +43,35 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # Database setup
 def get_db_connection():
     """Get SQLite database connection"""
-    return sqlite3.connect('./startup_analyzer.db')
+    # Ensure database file exists and create tables if needed
+    conn = sqlite3.connect('./startup_analyzer.db')
+    # Create tables if they don't exist
+    cursor = conn.cursor()
+    
+    # Create analysis history table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS analysis_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            document_type TEXT NOT NULL,
+            analysis_data TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            user_id TEXT DEFAULT 'anonymous'
+        )
+    ''')
+    
+    # Create user metrics table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_metrics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            document_type TEXT NOT NULL UNIQUE,
+            analysis_count INTEGER DEFAULT 1,
+            last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    conn.commit()
+    return conn
 
 def init_db():
     """Initialize SQLite database"""
@@ -76,7 +104,7 @@ def init_db():
     conn.close()
 
 # Initialize database (only when needed)
-# init_db()  # Commented out to avoid startup connection issues
+init_db()  # Create database tables on startup
 
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extract text from PDF file"""

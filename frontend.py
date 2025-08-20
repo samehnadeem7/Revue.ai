@@ -24,8 +24,12 @@ page = st.sidebar.selectbox(
     ["Upload & Analyze", "Analysis History", "Analytics Dashboard"]
 )
 
-# API endpoint
-API_URL = "http://localhost:8000"
+# API endpoint - can be changed for deployment
+API_URL = st.sidebar.text_input(
+    "API URL", 
+    value="http://localhost:8000",
+    help="Enter the URL of your FastAPI backend"
+)
 
 if page == "Upload & Analyze":
     st.header("📄 Upload & Analyze Document")
