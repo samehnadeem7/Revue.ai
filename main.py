@@ -137,7 +137,15 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
             "revenue", "strategy", "plan", "goal", "objective", "target", "growth",
             "feedback", "survey", "form", "response", "opinion", "suggestion", "improvement",
             "experience", "hackathon", "event", "participant", "user", "client", "feedback",
-            "analysis", "research", "data", "insight", "trend", "opportunity", "challenge"
+            "analysis", "research", "data", "insight", "trend", "opportunity", "challenge",
+            "innovation", "technology", "digital", "online", "app", "platform", "solution",
+            "problem", "need", "pain", "benefit", "value", "quality", "performance",
+            "team", "leadership", "management", "process", "workflow", "efficiency",
+            "cost", "price", "investment", "funding", "profit", "loss", "margin",
+            "competition", "competitive", "advantage", "differentiation", "positioning",
+            "brand", "marketing", "sales", "customer service", "support", "help",
+            "review", "rating", "satisfaction", "happiness", "success", "failure",
+            "learning", "education", "training", "development", "improvement", "optimization"
         ]
         
         business_score = sum(1 for indicator in business_indicators if indicator in text_lower)
@@ -164,65 +172,73 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
         )
 
     analysis_prompts = {
-        "Google Forms Feedback": """Analyze this customer feedback and provide comprehensive, actionable startup insights:
+        "Google Forms Feedback": """Analyze this customer feedback and provide comprehensive, actionable startup insights with detailed analysis:
 
-        1. CUSTOMER INSIGHTS OVERVIEW (3-4 sentences with specific metrics and patterns)
-           - Total response volume and completion rates
-           - Key demographic or segment insights
-           - Overall sentiment score (1-10 scale)
-           - Response quality indicators
+        1. CUSTOMER INSIGHTS OVERVIEW (Detailed analysis with specific metrics)
+           - Total response volume and completion rates with numerical breakdown
+           - Key demographic or segment insights with specific examples
+           - Overall sentiment score (1-10 scale) with trend analysis
+           - Response quality indicators and data reliability assessment
+           - Customer engagement patterns and response timing analysis
 
-        2. FEEDBACK PATTERNS & TRENDS (Detailed analysis with examples)
-           - Most common positive feedback themes (with specific quotes/examples)
-           - Most critical pain points identified (ranked by frequency and impact)
-           - Customer satisfaction patterns across different segments
-           - Response time patterns and engagement metrics
-           - Seasonal or time-based trends in feedback
+        2. FEEDBACK PATTERNS & TRENDS (Comprehensive analysis with examples)
+           - Most common positive feedback themes with specific quotes and frequency
+           - Most critical pain points identified with impact assessment and priority ranking
+           - Customer satisfaction patterns across different segments with detailed breakdown
+           - Response time patterns and engagement metrics with actionable insights
+           - Seasonal or time-based trends in feedback with correlation analysis
+           - Customer behavior patterns and decision-making factors
 
-        3. PRODUCT/MARKET FIT ANALYSIS (Quantified insights)
-           - How well the product meets customer needs (specific examples)
-           - Market gaps and underserved customer segments
-           - Customer segment preferences and priorities
-           - Feature adoption and usage patterns
-           - Customer journey pain points and friction areas
+        3. PRODUCT/MARKET FIT ANALYSIS (Quantified insights with examples)
+           - How well the product meets customer needs with specific examples and metrics
+           - Market gaps and underserved customer segments with size estimates
+           - Customer segment preferences and priorities with detailed breakdown
+           - Feature adoption and usage patterns with success metrics
+           - Customer journey pain points and friction areas with impact assessment
+           - Market validation signals and product-market fit indicators
 
-        4. IMPROVEMENT PRIORITIES (Actionable roadmap)
-           - High-impact, low-effort improvements (with expected ROI)
-           - Critical issues requiring immediate attention (with risk assessment)
-           - Long-term enhancement opportunities (with timeline)
-           - Customer-requested features (prioritized by demand)
-           - Technical debt and infrastructure improvements
+        4. IMPROVEMENT PRIORITIES (Comprehensive roadmap with ROI)
+           - High-impact, low-effort improvements with expected ROI and timeline
+           - Critical issues requiring immediate attention with risk assessment and urgency
+           - Long-term enhancement opportunities with strategic roadmap and milestones
+           - Customer-requested features prioritized by demand and business impact
+           - Technical debt and infrastructure improvements with cost-benefit analysis
+           - Process optimization opportunities with efficiency gains
 
-        5. CUSTOMER SENTIMENT ANALYSIS (Deep dive)
-           - Overall sentiment score and trends over time
-           - Emotional triggers and pain points (specific examples)
-           - Brand perception insights and reputation indicators
-           - Customer loyalty signals and churn risk factors
-           - Sentiment variations across different customer segments
+        5. CUSTOMER SENTIMENT ANALYSIS (Deep dive with emotional intelligence)
+           - Overall sentiment score and trends over time with detailed analysis
+           - Emotional triggers and pain points with specific examples and context
+           - Brand perception insights and reputation indicators with trend analysis
+           - Customer loyalty signals and churn risk factors with probability assessment
+           - Sentiment variations across different customer segments with demographic insights
+           - Customer satisfaction drivers and engagement factors
 
-        6. COMPETITIVE ADVANTAGE OPPORTUNITIES (Strategic insights)
-           - Unique value propositions identified from feedback
-           - Differentiation opportunities and market positioning
-           - Competitive positioning insights and gaps
-           - Customer switching barriers and retention factors
-           - Innovation opportunities based on customer needs
+        6. COMPETITIVE ADVANTAGE OPPORTUNITIES (Strategic insights with examples)
+           - Unique value propositions identified from feedback with competitive analysis
+           - Differentiation opportunities and market positioning with strategic recommendations
+           - Competitive positioning insights and gaps with market analysis
+           - Customer switching barriers and retention factors with strength assessment
+           - Innovation opportunities based on customer needs with implementation roadmap
+           - Market positioning strategies and competitive moats
 
-        7. GROWTH STRATEGY & SCALING (Execution plan)
-           - Customer acquisition insights and channel optimization
-           - Retention improvement strategies and loyalty programs
-           - Expansion opportunities and new market segments
-           - Pricing strategy insights and optimization
-           - Partnership and collaboration opportunities
+        7. GROWTH STRATEGY & SCALING (Comprehensive execution plan)
+           - Customer acquisition insights and channel optimization with performance metrics
+           - Retention improvement strategies and loyalty programs with success indicators
+           - Expansion opportunities and new market segments with entry strategy
+           - Pricing strategy insights and optimization with elasticity analysis
+           - Partnership and collaboration opportunities with strategic fit assessment
+           - International expansion potential with market readiness analysis
 
-        8. FINAL GROWTH STRATEGY (Comprehensive action plan)
-           - Immediate actions (Next 30 days) with specific tasks and owners
-           - Short-term goals (3-6 months) with measurable milestones
-           - Long-term vision (6-12 months) with success metrics
-           - Resource requirements and investment needs
-           - Risk mitigation strategies and contingency plans
-           - Expected outcomes and ROI projections
+        8. FINAL GROWTH STRATEGY (Detailed action plan with implementation)
+           - Immediate actions (Next 30 days) with specific tasks, owners, and timelines
+           - Short-term goals (3-6 months) with measurable milestones and success criteria
+           - Long-term vision (6-12 months) with strategic objectives and KPIs
+           - Resource requirements and investment needs with detailed breakdown
+           - Risk mitigation strategies and contingency plans with probability assessment
+           - Expected outcomes and ROI projections with measurement framework
+           - Success metrics and performance indicators for tracking progress
 
-        IMPORTANT: Provide specific examples, numbers, and actionable insights. If information is missing, state "Not found" and suggest what additional data would be valuable. Focus on insights that drive measurable growth and customer satisfaction improvements.""",
+        CRITICAL REQUIREMENTS: Provide comprehensive, detailed analysis for each section. Include specific examples, numbers, actionable insights, and implementation details. Address edge cases, potential challenges, and alternative scenarios. Focus on insights that drive measurable growth and customer satisfaction improvements. Each section should contain 200-400 words of detailed analysis."""
         
         "Startup Document": """Analyze this startup document and provide comprehensive, quantified insights with strategic depth:
 
@@ -1079,25 +1095,27 @@ Document Content:
         prompt = f"""
 You are a seasoned startup analyst and business consultant with 15+ years of experience. Using ONLY the provided RAG Context, produce a comprehensive, detailed analysis with clear section headers and bullet points where helpful. If a section lacks evidence in the RAG Context, write "Not found" for that section. Do not invent facts.
 
-IMPORTANT: Write in a professional, business-focused tone. Use minimal emojis and maintain a formal yet accessible style suitable for startup founders and investors.
+IMPORTANT: Write in a professional, business-focused tone. Use NO emojis and maintain a formal yet accessible style suitable for startup founders and investors.
 
 CRITICAL REQUIREMENTS:
-1. Provide DETAILED, COMPREHENSIVE analysis for each section
-2. Include SPECIFIC examples, numbers, and actionable insights
-3. Address edge cases and potential challenges in each section
-4. Provide alternative scenarios and contingency plans
-5. Include risk assessments and mitigation strategies
-6. Give concrete, implementable recommendations
-7. Use bullet points and structured formatting for clarity
-8. Aim for 200-400 words per major section for thorough coverage
+1. Provide DETAILED, COMPREHENSIVE analysis for each section (minimum 200-400 words per major section)
+2. Include SPECIFIC examples, numbers, and actionable insights with implementation details
+3. Address edge cases and potential challenges in each section with mitigation strategies
+4. Provide alternative scenarios and contingency plans for risk management
+5. Include risk assessments and mitigation strategies with probability analysis
+6. Give concrete, implementable recommendations with timelines and success metrics
+7. Use bullet points and structured formatting for clarity and readability
+8. Provide detailed explanations, not just brief statements
+9. Include specific action items with owners, timelines, and expected outcomes
+10. Address potential objections and challenges with proactive solutions
 
 Focus on ACTIONABLE insights that help founders:
-1. Scale their startup with specific strategies
-2. Correct mistakes with detailed solutions
-3. Identify growth opportunities with implementation plans
-4. Make data-driven decisions with clear metrics
-5. Handle edge cases and unexpected challenges
-6. Plan for multiple scenarios and contingencies
+1. Scale their startup with specific strategies and implementation steps
+2. Correct mistakes with detailed solutions and prevention measures
+3. Identify growth opportunities with implementation plans and success metrics
+4. Make data-driven decisions with clear metrics and measurement frameworks
+5. Handle edge cases and unexpected challenges with contingency planning
+6. Plan for multiple scenarios and contingencies with risk mitigation
 
 RAG Context (retrieved chunks per section):
 {rag_context}
@@ -1217,7 +1235,7 @@ async def convert_google_form(
             )
         
         # Create a mock PDF content based on form analysis
-        # In a production system, you'd use Google Forms API to get actual responses
+         # In a production system, you'd use actual form response data
         pdf_content = f"""
 Google Forms Analysis Report
 Form Title: {form_title}
