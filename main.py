@@ -795,7 +795,7 @@ Based on the form structure and typical Google Forms patterns, here are the expe
 - **Competitive Response**: Prepare for competitive reactions and market changes
 
 ---
-*Note: This is a comprehensive template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
+*Note: This is a comprehensive template analysis. For detailed AI-powered insights, ensure your Google Gemini API key has available quota.*
             """
         
         elif doc_type == "Startup Document":
@@ -867,7 +867,7 @@ This startup document has been analyzed for key growth indicators and strategic 
    - Prepare for funding rounds
 
 ---
-*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your Google Gemini API key has available quota.*
             """
         
         else:
@@ -914,7 +914,7 @@ This document has been analyzed for startup and business relevance.
    - Build sustainable competitive advantage
 
 ---
-*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your Google Gemini API key has available quota.*
             """
 
     # Try AI analysis first, fallback to template if API fails

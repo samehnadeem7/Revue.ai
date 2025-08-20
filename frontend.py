@@ -25,7 +25,7 @@ page = st.sidebar.selectbox(
 # API endpoint - can be changed for deployment
 API_URL = st.sidebar.text_input(
     "API URL", 
-    value="https://revue-ai-3.onrender.com",
+    value="https://revue-ai-5.onrender.com/",
     help="Enter the URL of your FastAPI backend"
 )
 
@@ -61,7 +61,7 @@ if page == "Upload & Analyze":
                         # Check if using fallback mode
                         if result.get("fallback"):
                             if result.get("api_status") == "rate_limited":
-                                st.warning("⚠️ **API Rate Limit Reached** - Using template analysis. For full AI insights, check your OpenAI API quota.")
+                                st.warning("⚠️ **API Rate Limit Reached** - Using template analysis. For full AI insights, check your Google Gemini API quota.")
                             else:
                                 st.warning("⚠️ **API Error** - Using template analysis. For full AI insights, check your API configuration.")
                         
