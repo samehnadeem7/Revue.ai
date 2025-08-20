@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 import fitz  # PyMuPDF library
@@ -9,6 +10,15 @@ from typing import Dict, List
 app = FastAPI(
     title="Startup Document Analyzer",
     description="Automatic startup document analysis"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "https://localhost:3000"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Load environment variables
