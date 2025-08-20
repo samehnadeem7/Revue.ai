@@ -3,8 +3,15 @@ import requests
 import json
 from datetime import datetime
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+
+# Try to import plotly, but handle gracefully if not available
+try:
+    import plotly.express as px
+    import plotly.graph_objects as go
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
+    st.warning("⚠️ Plotly charts are not available. Using basic charts instead.")
 
 # Page configuration
 st.set_page_config(
@@ -140,23 +147,32 @@ elif page == "Analytics Dashboard":
                 
                 df_dist = pd.DataFrame(analytics["document_type_distribution"])
                 
-                # Create pie chart
-                fig_pie = px.pie(
-                    df_dist, 
-                    values='count', 
-                    names='type',
-                    title="Document Types Analyzed"
-                )
-                st.plotly_chart(fig_pie, use_container_width=True)
-                
-                # Create bar chart
-                fig_bar = px.bar(
-                    df_dist,
-                    x='type',
-                    y='count',
-                    title="Analysis Count by Document Type"
-                )
-                st.plotly_chart(fig_bar, use_container_width=True)
+                if PLOTLY_AVAILABLE:
+                    # Create pie chart
+                    fig_pie = px.pie(
+                        df_dist, 
+                        values='count', 
+                        names='type',
+                        title="Document Types Analyzed"
+                    )
+                    st.plotly_chart(fig_pie, use_container_width=True)
+                    
+                    # Create bar chart
+                    fig_bar = px.bar(
+                        df_dist,
+                        x='type',
+                        y='count',
+                        title="Analysis Count by Document Type"
+                    )
+                    st.plotly_chart(fig_bar, use_container_width=True)
+                else:
+                    # Fallback to basic charts
+                    st.write("**Document Type Distribution:**")
+                    for doc_type in df_dist.itertuples():
+                        st.write(f"• {doc_type.type}: {doc_type.count} analyses")
+                    
+                    # Simple bar chart using st.bar_chart
+                    st.bar_chart(df_dist.set_index('type')['count'])
             else:
                 st.info("No analytics data available yet.")
                 
