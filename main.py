@@ -711,8 +711,8 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
     def get_fallback_analysis(doc_type: str, content: str) -> str:
         """Provide template-based analysis when AI API is unavailable"""
         
-                 if doc_type == "Google Forms Feedback":
-             return f"""
+        if doc_type == "Google Forms Feedback":
+            return f"""
 # Google Forms Analysis Report
 
 ## FORM OVERVIEW
@@ -796,63 +796,6 @@ Based on the form structure and typical Google Forms patterns, here are the expe
 
 ---
 *Note: This is a comprehensive template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
-
-## 🔍 FORM OVERVIEW
-- **Document Type**: Google Forms Feedback
-- **Content Length**: {len(content)} characters
-- **Analysis Method**: Template-based (API unavailable)
-
-## 📈 CUSTOMER INSIGHTS OVERVIEW
-Based on the form structure and typical Google Forms patterns, here are the expected insights for startup growth.
-
-## 🎯 FEEDBACK PATTERNS & TRENDS
-- **Form Engagement**: Analyze response completion rates
-- **Response Quality**: Monitor answer depth and detail
-- **Time Patterns**: Identify peak response times
-
-## 🚀 PRODUCT/MARKET FIT ANALYSIS
-- **Customer Needs**: Extract pain points and desires
-- **Market Validation**: Assess product-market fit signals
-- **Segment Preferences**: Identify target customer groups
-
-## ⚡ IMPROVEMENT PRIORITIES
-- **High-Impact Changes**: Focus on customer-requested features
-- **Critical Issues**: Address immediate pain points
-- **Long-term Strategy**: Plan for sustainable growth
-
-## 💡 CUSTOMER SENTIMENT ANALYSIS
-- **Overall Satisfaction**: Track sentiment trends
-- **Emotional Triggers**: Identify what drives engagement
-- **Brand Perception**: Monitor customer brand sentiment
-
-## 🏆 COMPETITIVE ADVANTAGE OPPORTUNITIES
-- **Unique Features**: Highlight differentiation points
-- **Market Gaps**: Identify underserved customer needs
-- **Positioning**: Strengthen competitive positioning
-
-## 📊 GROWTH STRATEGY & SCALING
-- **Customer Acquisition**: Optimize acquisition channels
-- **Retention**: Improve customer loyalty strategies
-- **Expansion**: Identify new market opportunities
-
-## 🎯 FINAL GROWTH STRATEGY
-1. **Immediate Actions** (Next 30 days)
-   - Analyze form responses for quick wins
-   - Implement high-impact improvements
-   - Set up response monitoring
-
-2. **Short-term Goals** (3-6 months)
-   - Optimize form structure based on feedback
-   - Implement customer-requested features
-   - Establish feedback collection processes
-
-3. **Long-term Vision** (6-12 months)
-   - Scale successful feedback mechanisms
-   - Expand to new customer segments
-   - Build data-driven decision culture
-
----
-*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
         
         elif doc_type == "Startup Document":
@@ -864,50 +807,50 @@ Based on the form structure and typical Google Forms patterns, here are the expe
 - **Content Length**: {len(content)} characters
 - **Analysis Method**: Template-based (API unavailable)
 
-## 📊 EXECUTIVE SUMMARY
+## EXECUTIVE SUMMARY
 This startup document has been analyzed for key growth indicators and strategic insights.
 
-## 💎 VALUE PROPOSITION & COMPETITIVE ADVANTAGE
+## VALUE PROPOSITION & COMPETITIVE ADVANTAGE
 - **Unique Selling Points**: Identify what makes this startup stand out
 - **Competitive Analysis**: Assess differentiation from competitors
 - **Market Positioning**: Evaluate strategic market position
 
-## 🌍 MARKET OPPORTUNITY
+## MARKET OPPORTUNITY
 - **Market Size**: Assess TAM, SAM, SOM potential
 - **Growth Trends**: Identify market growth drivers
 - **Target Segments**: Define primary customer groups
 
-## 💰 BUSINESS MODEL & REVENUE
+## BUSINESS MODEL & REVENUE
 - **Revenue Streams**: Analyze multiple income sources
 - **Unit Economics**: Evaluate LTV, CAC, and margins
 - **Scalability**: Assess growth potential
 
-## 🏆 COMPETITIVE LANDSCAPE
+## COMPETITIVE LANDSCAPE
 - **Competitor Analysis**: Identify key competitors
 - **Advantage Assessment**: Evaluate competitive strengths
 - **Market Entry**: Assess entry barriers and timing
 
-## 📈 FINANCIAL PROJECTIONS
+## FINANCIAL PROJECTIONS
 - **Revenue Forecasts**: Review 3-5 year projections
 - **Growth Metrics**: Analyze monthly/quarterly trends
 - **Key Ratios**: Evaluate financial health indicators
 
-## 👥 TEAM & EXECUTION
+## TEAM & EXECUTION
 - **Team Strengths**: Assess execution capabilities
 - **Experience Relevance**: Evaluate industry expertise
 - **Resource Allocation**: Review team structure
 
-## 💼 INVESTMENT & FUNDING
+## INVESTMENT & FUNDING
 - **Funding Requirements**: Assess capital needs
 - **Use of Funds**: Review allocation strategy
 - **Milestone Planning**: Define funding milestones
 
-## ⚠️ RISK ASSESSMENT
+## RISK ASSESSMENT
 - **Key Risks**: Identify primary risk factors
 - **Mitigation Strategies**: Review risk management
 - **Contingency Planning**: Assess backup plans
 
-## 🎯 FINAL GROWTH STRATEGY
+## FINAL GROWTH STRATEGY
 1. **Immediate Actions** (Next 30 days)
    - Validate key assumptions
    - Secure initial customer feedback
@@ -929,32 +872,32 @@ This startup document has been analyzed for key growth indicators and strategic 
         
         else:
             return f"""
-# 📄 Document Analysis Report
+# Document Analysis Report
 
-## 🔍 DOCUMENT OVERVIEW
+## DOCUMENT OVERVIEW
 - **Document Type**: {doc_type}
 - **Content Length**: {len(content)} characters
 - **Analysis Method**: Template-based (API unavailable)
 
-## 📊 BUSINESS RELEVANCE ASSESSMENT
+## BUSINESS RELEVANCE ASSESSMENT
 This document has been analyzed for startup and business relevance.
 
-## 🎯 KEY INSIGHTS
+## KEY INSIGHTS
 - **Content Quality**: Assess information completeness
 - **Business Value**: Identify actionable insights
 - **Strategic Implications**: Evaluate business impact
 
-## 🚀 GROWTH OPPORTUNITIES
+## GROWTH OPPORTUNITIES
 - **Market Insights**: Extract market intelligence
 - **Customer Understanding**: Identify customer needs
 - **Competitive Intelligence**: Assess market positioning
 
-## 📈 ACTION ITEMS
+## ACTION ITEMS
 - **Immediate Actions**: Quick wins and improvements
 - **Strategic Planning**: Long-term growth initiatives
 - **Resource Allocation**: Optimize resource usage
 
-## 🎯 FINAL GROWTH STRATEGY
+## FINAL GROWTH STRATEGY
 1. **Quick Wins** (Next 2 weeks)
    - Implement immediate improvements
    - Address low-hanging opportunities
