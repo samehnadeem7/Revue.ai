@@ -1,154 +1,167 @@
 import streamlit as st
 import requests
-import os
+import json
+from datetime import datetime
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
-# Configure the app
+# Page configuration
 st.set_page_config(
     page_title="Startup Document Analyzer",
     page_icon="🚀",
     layout="wide"
 )
 
-# Constants - Update this with your actual Render backend URL
-# Replace this with your actual Render backend URL from your dashboard
-API_URL = "https://revue-ai.onrender.com/"  # Update this!
+# Title and description
+st.title("🚀 Startup Document Analyzer")
+st.markdown("AI-powered analysis of startup documents with quantified insights")
 
-# For local testing, use: API_URL = "http://localhost:8000"
+# Sidebar for navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.selectbox(
+    "Choose a page",
+    ["Upload & Analyze", "Analysis History", "Analytics Dashboard"]
+)
 
-def main():
-    st.title("🚀 Startup Document Analyzer")
-    st.write("Get instant insights from your startup documents")
+# API endpoint
+API_URL = "http://localhost:8000"
 
-    # Main content in columns
-    col1, col2 = st.columns([2, 3])
-
-    with col1:
-        st.markdown("### 📤 Upload Document")
-        
-        # Document type selection
-        doc_type = st.selectbox(
-            "Document Type",
-            [
-                "Pitch Deck",
-                "Business Plan",
-                "Market Research",
-                "Financial Model"
-            ]
-        )
-        
-        # File upload
-        uploaded_file = st.file_uploader(
-            "Upload PDF",
-            type=['pdf'],
-            help="Upload your startup document"
-        )
-
-        if uploaded_file:
-            if st.button("🔄 Analyze Document"):
-                with st.spinner("Analyzing your document..."):
-                    try:
-                        # Upload and get analysis
-                        files = {'file': (uploaded_file.name, uploaded_file, 'application/pdf')}
-                        response = requests.post(
-                            f"{API_URL}/upload-pdf/",
-                            files=files,
-                            data={'document_type': doc_type}
-                        )
-                        
-                        if response.status_code == 200:
-                            # Store analysis in session state
-                            st.session_state['analysis'] = response.json()['analysis']
-                            st.success("Analysis complete!")
-                        else:
-                            st.error(f"Error: {response.text}")
-                    except requests.exceptions.ConnectionError:
-                        st.error("❌ Failed to connect to the backend server!")
-                        st.info("🔧 Please check:")
-                        st.info("1. Your Render backend URL is correct")
-                        st.info("2. The backend service is running")
-                        st.info("3. CORS is properly configured")
-                    except Exception as e:
-                        st.error(f"❌ Error: {str(e)}")
-                        st.info("🔧 Current API URL: " + API_URL)
-                        st.info("💡 Try updating the API_URL in the code with your actual Render backend URL")
-
-        # Show document guidelines
-        with st.expander("📋 Document Guidelines"):
-            st.markdown("""
-            **Pitch Deck should include:**
-            - Problem & Solution
-            - Market Size
-            - Business Model
-            - Competition
-            - Team
-            - Financials
-            
-            **Business Plan should include:**
-            - Executive Summary
-            - Market Analysis
-            - Product/Service
-            - Marketing Strategy
-            - Financial Projections
-            
-            **Market Research should include:**
-            - Market Size & Trends
-            - Customer Segments
-            - Competitor Analysis
-            - Market Drivers
-            
-            **Financial Model should include:**
-            - Revenue Streams
-            - Cost Structure
-            - Projections
-            - Unit Economics
-            """)
-
-    with col2:
-        st.markdown("### 📊 Analysis Results")
-        
-        if 'analysis' in st.session_state:
-            # Display analysis in tabs
-            analysis = st.session_state['analysis']
-            
-            # Create expandable sections for each analysis part
-            sections = analysis.split('\n\n')
-            for section in sections:
-                if section.strip():
-                    # Try to extract section title (assuming it starts with number or header)
-                    lines = section.strip().split('\n')
-                    title = lines[0].strip('1234567890. ')
+if page == "Upload & Analyze":
+    st.header("📄 Upload & Analyze Document")
+    
+    # File upload
+    uploaded_file = st.file_uploader(
+        "Choose a PDF file",
+        type=['pdf'],
+        help="Upload a startup document (pitch deck, business plan, etc.)"
+    )
+    
+    # Document type selection
+    document_type = st.selectbox(
+        "Document Type",
+        ["Pitch Deck", "Business Plan", "Market Research", "Financial Model"],
+        help="Select the type of document for better analysis"
+    )
+    
+    if uploaded_file is not None and st.button("🚀 Analyze Document"):
+        with st.spinner("Analyzing document..."):
+            try:
+                # Prepare file for upload
+                files = {"file": uploaded_file}
+                data = {"document_type": document_type}
+                
+                # Make API request
+                response = requests.post(f"{API_URL}/upload-pdf/", files=files, data=data)
+                
+                if response.status_code == 200:
+                    result = response.json()
                     
-                    with st.expander(f"📌 {title}", expanded=True):
-                        # Display rest of the section content
-                        content = '\n'.join(lines[1:]) if len(lines) > 1 else lines[0]
-                        st.markdown(content)
+                    st.success("✅ Analysis completed successfully!")
+                    
+                    # Display results
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Document", result["filename"])
+                        st.metric("Type", result["document_type"])
+                    with col2:
+                        st.metric("Analysis ID", result["analysis_id"])
+                    
+                    # Display analysis
+                    st.subheader("📊 AI Analysis Results")
+                    st.markdown(result["analysis"])
+                    
+                else:
+                    st.error(f"❌ Error: {response.text}")
+                    
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
+
+elif page == "Analysis History":
+    st.header("📚 Analysis History")
+    
+    try:
+        # Fetch analysis history
+        response = requests.get(f"{API_URL}/history/")
+        
+        if response.status_code == 200:
+            history = response.json()
             
-            # Export options
-            st.markdown("---")
-            st.markdown("### 📑 Export Options")
-            col1, col2 = st.columns(2)
+            if history["recent_analyses"]:
+                # Convert to DataFrame for better display
+                df = pd.DataFrame(history["recent_analyses"])
+                df["created_at"] = pd.to_datetime(df["created_at"])
+                
+                # Display table
+                st.dataframe(df, use_container_width=True)
+                
+                # Download option
+                csv = df.to_csv(index=False)
+                st.download_button(
+                    label="📥 Download History as CSV",
+                    data=csv,
+                    file_name=f"analysis_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv"
+                )
+            else:
+                st.info("No analysis history found.")
+        else:
+            st.error(f"❌ Error fetching history: {response.text}")
             
+    except Exception as e:
+        st.error(f"❌ Error: {str(e)}")
+
+elif page == "Analytics Dashboard":
+    st.header("📊 Analytics Dashboard")
+    
+    try:
+        # Fetch analytics
+        response = requests.get(f"{API_URL}/analytics/")
+        
+        if response.status_code == 200:
+            analytics = response.json()
+            
+            # Metrics row
+            col1, col2, col3 = st.columns(3)
             with col1:
-                if st.button("📥 Download Analysis"):
-                    st.download_button(
-                        label="Download Analysis (TXT)",
-                        data=analysis,
-                        file_name="startup_analysis.txt",
-                        mime="text/plain"
-                    )
-            
+                st.metric("Total Analyses", analytics["total_analyses"])
             with col2:
-                if st.button("📋 Copy to Clipboard"):
-                    st.code(analysis, language=None)
-                    st.info("Analysis copied to clipboard! Use Ctrl+C or Cmd+C to copy.")
+                st.metric("Recent (7 days)", analytics["recent_analyses_7_days"])
+            with col3:
+                st.metric("Document Types", len(analytics["document_type_distribution"]))
+            
+            # Document type distribution chart
+            if analytics["document_type_distribution"]:
+                st.subheader("📈 Document Type Distribution")
+                
+                df_dist = pd.DataFrame(analytics["document_type_distribution"])
+                
+                # Create pie chart
+                fig_pie = px.pie(
+                    df_dist, 
+                    values='count', 
+                    names='type',
+                    title="Document Types Analyzed"
+                )
+                st.plotly_chart(fig_pie, use_container_width=True)
+                
+                # Create bar chart
+                fig_bar = px.bar(
+                    df_dist,
+                    x='type',
+                    y='count',
+                    title="Analysis Count by Document Type"
+                )
+                st.plotly_chart(fig_bar, use_container_width=True)
+            else:
+                st.info("No analytics data available yet.")
+                
+        else:
+            st.error(f"❌ Error fetching analytics: {response.text}")
+            
+    except Exception as e:
+        st.error(f"❌ Error: {str(e)}")
 
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <div style='text-align: center'>
-        <p>🚀 Powered by AI - Get instant insights for your startup</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
+# Footer
+st.markdown("---")
+st.markdown("Built with FastAPI, PyMuPDF, and Streamlit") 
