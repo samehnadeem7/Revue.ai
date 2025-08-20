@@ -1,19 +1,22 @@
 services:
   - type: web
-    name: startup-doc-analyzer
-    runtime: python
-    buildCommand: pip install -r requirements.txt
+    name: startup-analyzer-api
+    env: python
+    plan: free
+    pythonVersion: "3.11"
+    buildCommand: |
+      pip install --upgrade pip setuptools wheel
+      pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
       - key: GOOGLE_API_KEY
-        sync: false
+        value: AIzaSyBRcWEkmYWPT3H7cbLh15t42bkUi1DGhoU
       - key: DATABASE_URL
-        value: "postgresql://postgres:Sameh%40123@db.jxggbdboltmdzcrbyyqw.supabase.co:5432/postgres"
+        value: postgresql://postgres:Sameh%40123@db.jxggbdboltmdzcrbyyqw.supabase.co:5432/postgres
       - key: SUPABASE_URL
-        value: "https://jxggbdboltmdzcrbyyqw.supabase.co"
+        value: https://jxggbdboltmdzcrbyyqw.supabase.co
       - key: SUPABASE_ANON_KEY
-        sync: false
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp4Z2diZGJvbHRtZHpjcmJ5eXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3MDA1MTAsImV4cCI6MjA3MTI3NjUxMH0.KaJx1DyAqAez605_yFBsRljlS6r6seqfPWxlCbMiiu0
       - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
+        value: KVSiIHyNwsr0HWxB2HTsjcdDItmOinCwX9wx5ZDEp6qN59MoZW14OY8bQMboKU7YsnRVepbHT5lIfmvJlGCaww==
+    healthCheckPath: /health

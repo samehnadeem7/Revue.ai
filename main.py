@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
-import fitz  # PyMuPDF library
+import pdfplumber  # PDF text extraction library
 import google.generativeai as genai
 from dotenv import load_dotenv
 from typing import Dict, List
@@ -94,12 +94,12 @@ def init_db():
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extract text from PDF file"""
     try:
-        doc = fitz.open(pdf_path)
-        text = ""
-        for page in doc:
-            text += page.get_text()
-        doc.close()
-        return text
+        with pdfplumber.open(pdf_path) as doc:
+            text = ""
+            for page in doc.pages:
+                if page.extract_text():
+                    text += page.extract_text() + "\n"
+            return text
     except Exception as e:
         print(f"Error extracting text: {e}")
         return ""
