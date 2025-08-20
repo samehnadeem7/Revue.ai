@@ -1,11 +1,13 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 import fitz  # PyMuPDF library
 import google.generativeai as genai
 from dotenv import load_dotenv
-from typing import Dict, List
+from typing import Dict, List, Tuple
+import re
+import numpy as np
 import sqlite3
 from datetime import datetime
 import json
@@ -32,9 +34,6 @@ api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
     raise ValueError("GOOGLE_API_KEY not found in environment variables")
 genai.configure(api_key=api_key)
-
-# Database configuration
-from config import DATABASE_URL
 
 # Create uploads directory
 UPLOAD_DIR = "uploads"
@@ -76,31 +75,6 @@ def get_db_connection():
 def init_db():
     """Initialize SQLite database"""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Create analysis history table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS analysis_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename TEXT NOT NULL,
-            document_type TEXT NOT NULL,
-            analysis_data TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            user_id TEXT DEFAULT 'anonymous'
-        )
-    ''')
-    
-    # Create user metrics table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS user_metrics (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            document_type TEXT NOT NULL UNIQUE,
-            analysis_count INTEGER DEFAULT 1,
-            last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    conn.commit()
     conn.close()
 
 # Initialize database (only when needed)
@@ -120,9 +94,22 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         return ""
 
 def analyze_startup_document(text: str, document_type: str) -> Dict:
-    """Analyze document based on type and return structured insights with metrics"""
-    
+    """Analyze document based on type and return structured insights"""
+
     analysis_prompts = {
+        "Business Analysis": """Analyze this document and provide:
+        1. Overall Summary (2-3 sentences)
+        2. Company Vision and Overview(identify the type of business from the document, then propose a clear vision statement and a short overview).
+        3. Industry and Market Analysis(analyze the industry the business belongs to, its competitive positioning, market opportunities, and risks).
+        4. Feedback Analysis
+           4.1 Positive Points (3-4 most common)
+           4.2 Negative Points (3-4 most common)
+           4.3 Non-business Related (staff, cleanliness, behaviour, etc.)
+           4.4 Spam Reviews Check – identify if any reviews appear irrelevant or spam-like (summarize in 1–2 sentences).
+        5. Final Verdict(a thoughtful conclusion combining all the above insights with an intelligent recommendation or improvement direction).
+
+        Format in clear sections with bullet points where relevant.""",
+        
         "Pitch Deck": """Analyze this pitch deck and provide QUANTIFIED insights:
 
         1. EXECUTIVE SUMMARY (2-3 sentences with key metrics)
@@ -288,30 +275,141 @@ def analyze_startup_document(text: str, document_type: str) -> Dict:
         Focus on FINANCIAL VIABILITY and INVESTMENT POTENTIAL."""
     }
 
-    prompt = f"""
-    You are an expert startup analyst and venture capitalist with 15+ years of experience. 
-    Analyze this document and provide ACTIONABLE, QUANTIFIED insights that help founders understand:
-    1. How their startup will STAND OUT from competitors
-    2. Specific NUMBERS and METRICS for growth
-    3. SCALABILITY potential with concrete milestones
-    4. INVESTMENT attractiveness with quantified returns
+    def chunk_text(input_text: str, max_chars: int = 1500) -> List[str]:
+        paragraphs = re.split(r"\n\s*\n", input_text)
+        chunks: List[str] = []
+        current: List[str] = []
+        current_len = 0
+        for para in paragraphs:
+            para = para.strip()
+            if not para:
+                continue
+            if current_len + len(para) + 1 > max_chars and current:
+                chunks.append("\n".join(current))
+                current = [para]
+                current_len = len(para)
+            else:
+                current.append(para)
+                current_len += len(para) + 1
+        if current:
+            chunks.append("\n".join(current))
+        # Fallback if text was not separable
+        if not chunks:
+            for i in range(0, len(input_text), max_chars):
+                chunks.append(input_text[i:i + max_chars])
+        return chunks
 
-    Document Content:
-    {text}
+    def embed_text(content: str) -> np.ndarray:
+        last_error: Exception | None = None
+        for model_name in ["models/text-embedding-004", "text-embedding-004"]:
+            try:
+                resp = genai.embed_content(model=model_name, content=content)
+                # SDK may return dict-like or object with .embedding.values
+                if isinstance(resp, dict):
+                    emb = resp.get("embedding")
+                else:
+                    emb = getattr(resp, "embedding", None)
+                if isinstance(emb, dict) and "values" in emb:
+                    return np.array(emb["values"], dtype=float)
+                if isinstance(emb, list):
+                    return np.array(emb, dtype=float)
+                # Some SDK versions nest under resp["embeddings"][0]["values"]
+                embeddings = resp.get("embeddings") if isinstance(resp, dict) else None
+                if embeddings and isinstance(embeddings, list) and embeddings[0].get("values"):
+                    return np.array(embeddings[0]["values"], dtype=float)
+            except Exception as e:
+                last_error = e
+        raise last_error or RuntimeError("Failed to get embedding")
 
-    {analysis_prompts.get(document_type, analysis_prompts["Pitch Deck"])}
+    def cosine_similarity(matrix: np.ndarray, vector: np.ndarray) -> np.ndarray:
+        vector_norm = np.linalg.norm(vector) + 1e-10
+        matrix_norms = np.linalg.norm(matrix, axis=1) + 1e-10
+        return (matrix @ vector) / (matrix_norms * vector_norm)
 
-    IMPORTANT: 
-    - Provide SPECIFIC NUMBERS (e.g., "20% market share by 2026", "30% cost reduction")
-    - Include COMPETITIVE ADVANTAGES with metrics
-    - Give ACTIONABLE recommendations with timelines
-    - Focus on SCALABILITY and INVESTMENT potential
-    - Use industry benchmarks and realistic projections
-    """
+    def parse_section_queries(prompt_text: str) -> List[str]:
+        lines = [line.strip() for line in prompt_text.strip().split("\n")]
+        queries: List[str] = []
+        for line in lines:
+            # Capture numbered headings like 1., 4.1, 4.1. etc.
+            if re.match(r"^\d+(?:\.\d+)*\.?\s+", line):
+                clean = re.sub(r"^\d+(?:\.\d+)*\.?\s+", "", line)
+                if clean:
+                    queries.append(clean)
+        # Fallback if parsing fails
+        if not queries:
+            queries = [
+                "Overall Summary",
+                "Company Vision and Overview",
+                "Industry and Market Analysis",
+                "Positive Points",
+                "Negative Points",
+                "Non-business Related",
+                "Final Verdict",
+            ]
+        return queries
 
     try:
+        # Build RAG store: chunk -> embedding
+        chunks = chunk_text(text, max_chars=1500)
+        chunk_embeddings = []
+        for chunk in chunks:
+            try:
+                chunk_embeddings.append(embed_text(chunk))
+            except Exception:
+                # If any chunk embedding fails, skip that chunk
+                continue
+        if not chunk_embeddings:
+            # Fallback: if embeddings failed entirely, use original non-RAG prompt
+            business_analyst_prompt = f"""
+You are a seasoned business analyst. Provide structured, practical insights with bullet points, citing specific evidence from the document when possible. If information is missing, state "Not found".
+
+Document Content:
+{text}
+
+{analysis_prompts.get(document_type, analysis_prompts["Business Analysis"]) }
+"""
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(business_analyst_prompt, generation_config={"temperature": 0.9})
+            return {"analysis": response.text}
+
+        embeddings_matrix = np.vstack(chunk_embeddings)
+
+        # Build per-section retrieval
+        section_names = parse_section_queries(analysis_prompts.get(document_type, list(analysis_prompts.values())[0]))
+        section_to_context: List[Tuple[str, str]] = []
+        for section in section_names:
+            try:
+                query_vec = embed_text(section)
+                sims = cosine_similarity(embeddings_matrix, query_vec)
+                top_indices = np.argsort(-sims)[:3]
+                retrieved = []
+                for idx in top_indices:
+                    # Guard against mismatches if some chunks failed to embed
+                    if 0 <= idx < len(chunks):
+                        retrieved.append(f"[Chunk {int(idx)+1}]\n{chunks[int(idx)]}")
+                context = "\n\n".join(retrieved)
+                section_to_context.append((section, context))
+            except Exception:
+                section_to_context.append((section, ""))
+
+        rag_context_lines = []
+        for section, context in section_to_context:
+            rag_context_lines.append(f"### {section}\n{context if context else 'No relevant content found.'}")
+        rag_context = "\n\n".join(rag_context_lines)
+
+        # Compose final prompt with RAG context and business-analyst persona
+        prompt = f"""
+You are a seasoned business analyst. Using ONLY the provided RAG Context, produce a concise, structured analysis with clear section headers and bullet points where helpful. If a section lacks evidence in the RAG Context, write "Not found" for that section. Do not invent facts.
+
+RAG Context (retrieved chunks per section):
+{rag_context}
+
+Task:
+{analysis_prompts.get(document_type, list(analysis_prompts.values())[0]) }
+"""
+
         model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
+        response = model.generate_content(prompt, generation_config={"temperature": 0.9})
         return {"analysis": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -319,7 +417,7 @@ def analyze_startup_document(text: str, document_type: str) -> Dict:
 @app.post("/upload-pdf/")
 async def upload_pdf(
     file: UploadFile = File(...),
-    document_type: str = "Pitch Deck"  # Default type
+    document_type: str = "Business Analysis"  # Default type
 ):
     """Upload and automatically analyze startup document"""
     if not file.filename.endswith('.pdf'):
