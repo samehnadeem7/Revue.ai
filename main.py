@@ -795,7 +795,6 @@ Based on the form structure and typical Google Forms patterns, here are the expe
 - **Competitive Response**: Prepare for competitive reactions and market changes
 
 ---
-*Note: This is a comprehensive template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
         
         elif doc_type == "Startup Document":
@@ -867,7 +866,6 @@ This startup document has been analyzed for key growth indicators and strategic 
    - Prepare for funding rounds
 
 ---
-*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
         
         else:
@@ -914,7 +912,6 @@ This document has been analyzed for startup and business relevance.
    - Build sustainable competitive advantage
 
 ---
-*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
 
     # Try AI analysis first, fallback to template if API fails
@@ -1074,16 +1071,26 @@ Task:
         return {"analysis": model.choices[0].message.content}
         
     except Exception as e:
-        # If AI analysis fails (rate limit, API error, etc.), use template fallback
+        # If AI analysis fails (rate limit, API error, etc.), provide better error handling
         error_msg = str(e)
         if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
-            # API rate limit hit - use template analysis
-            fallback_analysis = get_fallback_analysis(detected_type, text)
-            return {"analysis": fallback_analysis, "api_status": "rate_limited", "fallback": True}
+            # API rate limit hit - provide helpful error message
+            raise HTTPException(
+                status_code=429, 
+                detail="OpenAI API rate limit exceeded. Please try again in a few minutes or check your API quota."
+            )
+        elif "api_key" in error_msg.lower() or "authentication" in error_msg.lower():
+            # API key issues
+            raise HTTPException(
+                status_code=500, 
+                detail="OpenAI API authentication failed. Please check your API key configuration."
+            )
         else:
-            # Other API error - still use template but indicate the issue
-            fallback_analysis = get_fallback_analysis(detected_type, text)
-            return {"analysis": fallback_analysis, "api_status": "error", "fallback": True, "error": error_msg}
+            # Other API errors
+            raise HTTPException(
+                status_code=500, 
+                detail=f"AI analysis failed: {error_msg}. Please try again or contact support."
+            )
 
 @app.post("/upload-pdf/")
 async def upload_pdf(
@@ -1210,8 +1217,6 @@ Based on the form structure and typical Google Forms patterns, here are the expe
    - Customer pain points identification
    - Feature request prioritization
    - Market gap analysis
-
-Note: This is a template analysis. For detailed insights, the form should contain actual response data.
         """
         
         # Create a temporary PDF file
