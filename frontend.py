@@ -25,7 +25,7 @@ page = st.sidebar.selectbox(
 # API endpoint - can be changed for deployment
 API_URL = st.sidebar.text_input(
     "API URL", 
-    value="http://localhost:8000",
+    value="   https://revue-ai-1.onrender.com",
     help="Enter the URL of your FastAPI backend"
 )
 
