@@ -238,7 +238,7 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
            - Expected outcomes and ROI projections with measurement framework
            - Success metrics and performance indicators for tracking progress
 
-        CRITICAL REQUIREMENTS: Provide comprehensive, detailed analysis for each section. Include specific examples, numbers, actionable insights, and implementation details. Address edge cases, potential challenges, and alternative scenarios. Focus on insights that drive measurable growth and customer satisfaction improvements. Each section should contain 200-400 words of detailed analysis."""
+        CRITICAL REQUIREMENTS: Provide comprehensive, detailed analysis for each section. Include specific examples, numbers, actionable insights, and implementation details. Address edge cases, potential challenges, and alternative scenarios. Focus on insights that drive measurable growth and customer satisfaction improvements. Each section should contain 200-400 words of detailed analysis.""",
         
         "Startup Document": """Analyze this startup document and provide comprehensive, quantified insights with strategic depth:
 
