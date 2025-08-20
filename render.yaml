@@ -8,7 +8,7 @@ services:
       pip install --upgrade pip setuptools wheel
       pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-         envVars:
-       # Add your OpenAI API key in Render dashboard environment variables
-       # DO NOT put actual API keys here - they will be visible in Git!
+    envVars:
+      # Add your Google Gemini API key in Render dashboard environment variables
+      # DO NOT put actual API keys here - they will be visible in Git!
     healthCheckPath: /health

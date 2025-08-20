@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
 import fitz  # PyMuPDF library
-import openai
+import google.generativeai
 from dotenv import load_dotenv
 from typing import Dict, List, Tuple
 import re
@@ -31,11 +31,11 @@ app.add_middleware(
 # Load environment variables
 load_dotenv()
 
-# Configure OpenAI API
-api_key = os.getenv("OPENAI_API_KEY")
+# Configure Google Gemini API
+api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
-    raise ValueError("OPENAI_API_KEY not found in environment variables")
-openai.api_key = api_key
+    raise ValueError("GOOGLE_API_KEY not found in environment variables")
+google.generativeai.configure(api_key=api_key)
 
 # Create uploads directory
 UPLOAD_DIR = "uploads"
@@ -170,7 +170,7 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
             status_code=400, 
             detail="Document content appears to be unrelated to business, feedback, or startup analysis. Please upload a document with business content, customer feedback, or startup-related information."
         )
-
+    
     analysis_prompts = {
         "Google Forms Feedback": """Analyze this customer feedback and provide comprehensive, actionable startup insights with detailed analysis:
 
@@ -795,6 +795,7 @@ Based on the form structure and typical Google Forms patterns, here are the expe
 - **Competitive Response**: Prepare for competitive reactions and market changes
 
 ---
+*Note: This is a comprehensive template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
         
         elif doc_type == "Startup Document":
@@ -866,6 +867,7 @@ This startup document has been analyzed for key growth indicators and strategic 
    - Prepare for funding rounds
 
 ---
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
         
         else:
@@ -912,6 +914,7 @@ This document has been analyzed for startup and business relevance.
    - Build sustainable competitive advantage
 
 ---
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
 
     # Try AI analysis first, fallback to template if API fails
@@ -943,11 +946,11 @@ This document has been analyzed for startup and business relevance.
 
         def embed_text(content: str) -> np.ndarray:
             try:
-                response = openai.Embedding.create(
-                    model="text-embedding-ada-002",
-                    input=content
+                model = google.generativeai.embed_content(
+                    model="models/embedding-001",
+                    content=content
                 )
-                embedding = response['data'][0]['embedding']
+                embedding = model.embedding
                 return np.array(embedding, dtype=float)
             except Exception as e:
                 raise RuntimeError(f"Failed to get embedding: {str(e)}")
@@ -995,16 +998,16 @@ You are a seasoned startup analyst and business consultant. Provide structured, 
 
 IMPORTANT: Write in a professional, business-focused tone. Use minimal emojis and maintain a formal yet accessible style suitable for startup founders and investors.
 
-Document Content:
-{text}
+    Document Content:
+    {text}
 
 {analysis_prompts.get(prompt_type, analysis_prompts["Startup Document"]) }
 """
-            model = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[{"role": "user", "content": business_analyst_prompt}]
+            model = google.generativeai.generate_content(
+                model="gemini-1.5-flash",
+                contents=business_analyst_prompt
             )
-            return {"analysis": model.choices[0].message.content}
+            return {"analysis": model.text}
 
         embeddings_matrix = np.vstack(chunk_embeddings)
 
@@ -1064,33 +1067,23 @@ Task:
 {analysis_prompts.get(prompt_type, list(analysis_prompts.values())[0]) }
 """
 
-        model = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}]
+        model = google.generativeai.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt
         )
-        return {"analysis": model.choices[0].message.content}
+        return {"analysis": model.text}
         
     except Exception as e:
-        # If AI analysis fails (rate limit, API error, etc.), provide better error handling
+        # If AI analysis fails (rate limit, API error, etc.), use template fallback
         error_msg = str(e)
         if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
-            # API rate limit hit - provide helpful error message
-            raise HTTPException(
-                status_code=429, 
-                detail="OpenAI API rate limit exceeded. Please try again in a few minutes or check your API quota."
-            )
-        elif "api_key" in error_msg.lower() or "authentication" in error_msg.lower():
-            # API key issues
-            raise HTTPException(
-                status_code=500, 
-                detail="OpenAI API authentication failed. Please check your API key configuration."
-            )
+            # API rate limit hit - use template analysis
+            fallback_analysis = get_fallback_analysis(detected_type, text)
+            return {"analysis": fallback_analysis, "api_status": "rate_limited", "fallback": True}
         else:
-            # Other API errors
-            raise HTTPException(
-                status_code=500, 
-                detail=f"AI analysis failed: {error_msg}. Please try again or contact support."
-            )
+            # Other API error - still use template but indicate the issue
+            fallback_analysis = get_fallback_analysis(detected_type, text)
+            return {"analysis": fallback_analysis, "api_status": "error", "fallback": True, "error": error_msg}
 
 @app.post("/upload-pdf/")
 async def upload_pdf(
@@ -1217,6 +1210,8 @@ Based on the form structure and typical Google Forms patterns, here are the expe
    - Customer pain points identification
    - Feature request prioritization
    - Market gap analysis
+
+Note: This is a template analysis. For detailed insights, the form should contain actual response data.
         """
         
         # Create a temporary PDF file
@@ -1298,7 +1293,7 @@ async def health_check():
             "database": "disconnected",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
-        }
+    }
 
 @app.get("/analytics/")
 async def get_analytics():
