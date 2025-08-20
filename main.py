@@ -164,235 +164,528 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
         )
 
     analysis_prompts = {
-        "Google Forms Feedback": """Analyze this customer feedback and provide actionable startup insights:
+        "Google Forms Feedback": """Analyze this customer feedback and provide comprehensive, actionable startup insights:
 
-        1. CUSTOMER INSIGHTS OVERVIEW (2-3 sentences with key metrics)
-        2. FEEDBACK PATTERNS & TRENDS
-           - Most common positive feedback themes
-           - Most critical pain points identified
-           - Customer satisfaction patterns
-        3. PRODUCT/MARKET FIT ANALYSIS
-           - How well the product meets customer needs
-           - Market gaps and opportunities
-           - Customer segment preferences
-        4. IMPROVEMENT PRIORITIES
-           - High-impact, low-effort improvements
-           - Critical issues requiring immediate attention
-           - Long-term enhancement opportunities
-        5. CUSTOMER SENTIMENT ANALYSIS
-           - Overall sentiment score and trends
-           - Emotional triggers and pain points
-           - Brand perception insights
-        6. COMPETITIVE ADVANTAGE OPPORTUNITIES
-           - Unique value propositions identified
-           - Differentiation opportunities
-           - Competitive positioning insights
-        7. GROWTH STRATEGY & SCALING
-           - Customer acquisition insights
-           - Retention improvement strategies
-           - Expansion opportunities
-        8. FINAL GROWTH STRATEGY
-           - 3-5 actionable steps to scale up
-           - Priority order for implementation
-           - Expected impact and timeline
+        1. CUSTOMER INSIGHTS OVERVIEW (3-4 sentences with specific metrics and patterns)
+           - Total response volume and completion rates
+           - Key demographic or segment insights
+           - Overall sentiment score (1-10 scale)
+           - Response quality indicators
 
-        Focus on ACTIONABLE insights that drive growth and customer satisfaction.""",
+        2. FEEDBACK PATTERNS & TRENDS (Detailed analysis with examples)
+           - Most common positive feedback themes (with specific quotes/examples)
+           - Most critical pain points identified (ranked by frequency and impact)
+           - Customer satisfaction patterns across different segments
+           - Response time patterns and engagement metrics
+           - Seasonal or time-based trends in feedback
+
+        3. PRODUCT/MARKET FIT ANALYSIS (Quantified insights)
+           - How well the product meets customer needs (specific examples)
+           - Market gaps and underserved customer segments
+           - Customer segment preferences and priorities
+           - Feature adoption and usage patterns
+           - Customer journey pain points and friction areas
+
+        4. IMPROVEMENT PRIORITIES (Actionable roadmap)
+           - High-impact, low-effort improvements (with expected ROI)
+           - Critical issues requiring immediate attention (with risk assessment)
+           - Long-term enhancement opportunities (with timeline)
+           - Customer-requested features (prioritized by demand)
+           - Technical debt and infrastructure improvements
+
+        5. CUSTOMER SENTIMENT ANALYSIS (Deep dive)
+           - Overall sentiment score and trends over time
+           - Emotional triggers and pain points (specific examples)
+           - Brand perception insights and reputation indicators
+           - Customer loyalty signals and churn risk factors
+           - Sentiment variations across different customer segments
+
+        6. COMPETITIVE ADVANTAGE OPPORTUNITIES (Strategic insights)
+           - Unique value propositions identified from feedback
+           - Differentiation opportunities and market positioning
+           - Competitive positioning insights and gaps
+           - Customer switching barriers and retention factors
+           - Innovation opportunities based on customer needs
+
+        7. GROWTH STRATEGY & SCALING (Execution plan)
+           - Customer acquisition insights and channel optimization
+           - Retention improvement strategies and loyalty programs
+           - Expansion opportunities and new market segments
+           - Pricing strategy insights and optimization
+           - Partnership and collaboration opportunities
+
+        8. FINAL GROWTH STRATEGY (Comprehensive action plan)
+           - Immediate actions (Next 30 days) with specific tasks and owners
+           - Short-term goals (3-6 months) with measurable milestones
+           - Long-term vision (6-12 months) with success metrics
+           - Resource requirements and investment needs
+           - Risk mitigation strategies and contingency plans
+           - Expected outcomes and ROI projections
+
+        IMPORTANT: Provide specific examples, numbers, and actionable insights. If information is missing, state "Not found" and suggest what additional data would be valuable. Focus on insights that drive measurable growth and customer satisfaction improvements.""",
         
-        "Startup Document": """Analyze this startup document and provide QUANTIFIED insights:
+        "Startup Document": """Analyze this startup document and provide comprehensive, quantified insights with strategic depth:
 
-        1. EXECUTIVE SUMMARY (2-3 sentences with key metrics)
-        2. VALUE PROPOSITION & COMPETITIVE ADVANTAGE
-           - What makes this startup unique?
-           - How will it stand out from competitors?
-           - Quantified benefits (e.g., "30% cost reduction", "5x faster")
-        3. MARKET OPPORTUNITY (with numbers)
-           - Market size (TAM, SAM, SOM)
-           - Growth rate (CAGR)
-           - Target market segments with sizes
-        4. BUSINESS MODEL & REVENUE PROJECTIONS
-           - Revenue streams with projected amounts
-           - Unit economics (LTV, CAC, margins)
-           - Break-even timeline
-        5. COMPETITIVE LANDSCAPE & DIFFERENTIATION
-           - Top 3 competitors
-           - Competitive advantages with metrics
-           - Market positioning strategy
-        6. FINANCIAL HIGHLIGHTS & PROJECTIONS
-           - Revenue projections (3-5 years)
-           - Growth rates (monthly/quarterly)
-           - Key financial metrics
-        7. TEAM STRENGTHS & EXECUTION CAPABILITY
-        8. INVESTMENT ASK & USE OF FUNDS
-        9. RISK ASSESSMENT & MITIGATION
-        10. FINAL GROWTH STRATEGY
-            - 3-5 specific steps to scale up
-            - Priority order and timeline
-            - Expected outcomes and metrics
+        1. EXECUTIVE SUMMARY (4-5 sentences with key metrics and positioning)
+           - Core value proposition in one sentence
+           - Market opportunity size and growth potential
+           - Competitive positioning and differentiation
+           - Key success factors and risk factors
+           - Investment potential and funding readiness
 
-        Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES wherever possible.
-        Focus on how this startup will STAND OUT and SCALE.""",
+        2. VALUE PROPOSITION & COMPETITIVE ADVANTAGE (Detailed analysis)
+           - What makes this startup unique? (specific features and benefits)
+           - How will it stand out from competitors? (detailed comparison)
+           - Quantified benefits (e.g., "30% cost reduction", "5x faster", "2x ROI")
+           - Intellectual property and defensibility factors
+           - Scalability and replication potential
+           - Customer acquisition and retention advantages
+
+        3. MARKET OPPORTUNITY (Comprehensive market analysis)
+           - Market size breakdown: TAM, SAM, SOM with specific numbers
+           - Growth rate (CAGR) and market evolution trends
+           - Target market segments with sizes and characteristics
+           - Market entry timing and window of opportunity
+           - Regulatory environment and compliance requirements
+           - Market maturity and adoption curve position
+
+        4. BUSINESS MODEL & REVENUE PROJECTIONS (Financial deep dive)
+           - Revenue streams with projected amounts and growth rates
+           - Unit economics: LTV, CAC, payback period, margins
+           - Break-even timeline and profitability projections
+           - Pricing strategy and price elasticity analysis
+           - Customer acquisition and retention economics
+           - Revenue diversification and risk mitigation
+
+        5. COMPETITIVE LANDSCAPE & DIFFERENTIATION (Strategic positioning)
+           - Top 3-5 competitors with market share and positioning
+           - Competitive advantages with specific metrics and evidence
+           - Market positioning strategy and brand differentiation
+           - Competitive response scenarios and counter-strategies
+           - Barriers to entry and competitive moats
+           - Partnership and collaboration opportunities
+
+        6. FINANCIAL HIGHLIGHTS & PROJECTIONS (Comprehensive financial analysis)
+           - Revenue projections (3-5 years) with monthly/quarterly breakdowns
+           - Growth rates and seasonal patterns
+           - Key financial metrics and ratios
+           - Cash flow projections and working capital requirements
+           - Funding requirements and use of funds
+           - Exit strategy and valuation projections
+
+        7. TEAM STRENGTHS & EXECUTION CAPABILITY (Human capital analysis)
+           - Team composition and key personnel backgrounds
+           - Relevant experience and industry expertise
+           - Execution track record and capabilities
+           - Team scalability and hiring plans
+           - Advisory board and network strength
+           - Cultural fit and team dynamics
+
+        8. INVESTMENT ASK & USE OF FUNDS (Funding strategy)
+           - Funding amount and valuation justification
+           - Use of funds breakdown with specific allocations
+           - Milestone-based funding approach
+           - Investor value proposition and returns
+           - Exit timeline and strategy
+           - Risk factors and mitigation strategies
+
+        9. RISK ASSESSMENT & MITIGATION (Comprehensive risk analysis)
+           - Market risks with probability and impact assessment
+           - Technology risks and technical debt
+           - Team risks and key person dependencies
+           - Financial risks and cash flow challenges
+           - Regulatory and compliance risks
+           - Mitigation strategies and contingency plans
+
+        10. FINAL GROWTH STRATEGY (Detailed execution roadmap)
+            - Immediate actions (Next 30 days) with specific tasks, owners, and timelines
+            - Short-term goals (3-6 months) with measurable milestones
+            - Long-term vision (6-12 months) with strategic objectives
+            - Resource requirements and investment needs
+            - Risk mitigation strategies and contingency plans
+            - Expected outcomes and ROI projections
+            - Success metrics and KPIs for tracking progress
+
+        IMPORTANT: Provide SPECIFIC NUMBERS, PERCENTAGES, TIMELINES, and ACTIONABLE insights. If information is missing, state "Not found" and explain what additional data would be valuable. Focus on how this startup will STAND OUT, SCALE, and achieve sustainable competitive advantage. Include edge cases and potential challenges that could impact success.""",
         
-        "Business Plan": """Analyze this business plan and provide QUANTIFIED insights:
+        "Business Plan": """Analyze this business plan and provide comprehensive, quantified insights with strategic depth:
 
-        1. BUSINESS OVERVIEW & VALUE PROPOSITION
-           - Unique selling points with metrics
-           - Competitive advantages quantified
-        2. MARKET ANALYSIS & OPPORTUNITY
-           - Market size with specific numbers
-           - Growth rates and trends
-           - Target segments with sizes
-        3. PRODUCT/SERVICE DETAILS & DIFFERENTIATION
-           - Key features with quantified benefits
-           - How it stands out from alternatives
-        4. REVENUE MODEL & PROJECTIONS
-           - Revenue streams with amounts
-           - Pricing strategy and margins
-           - 3-5 year projections
-        5. MARKETING STRATEGY & ACQUISITION
-           - Customer acquisition channels
-           - CAC and conversion rates
-           - Growth marketing tactics
-        6. OPERATIONS PLAN & SCALABILITY
-           - Operational efficiency metrics
+        1. BUSINESS OVERVIEW & VALUE PROPOSITION (Strategic positioning)
+           - Unique selling points with specific metrics and evidence
+           - Competitive advantages quantified and validated
+           - Market positioning and brand differentiation
+           - Core competencies and strategic capabilities
+           - Business model innovation and sustainability
+
+        2. MARKET ANALYSIS & OPPORTUNITY (Comprehensive market intelligence)
+           - Market size with specific numbers and growth projections
+           - Growth rates, trends, and market evolution drivers
+           - Target segments with sizes, characteristics, and behaviors
+           - Market entry timing and competitive landscape
+           - Regulatory environment and compliance requirements
+           - Market maturity and adoption curve analysis
+
+        3. PRODUCT/SERVICE DETAILS & DIFFERENTIATION (Feature analysis)
+           - Key features with quantified benefits and user impact
+           - How it stands out from alternatives (detailed comparison)
+           - Technology stack and technical advantages
+           - Scalability and performance characteristics
+           - User experience and design differentiation
+           - Quality assurance and reliability factors
+
+        4. REVENUE MODEL & PROJECTIONS (Financial strategy)
+           - Revenue streams with amounts and growth projections
+           - Pricing strategy and price elasticity analysis
+           - 3-5 year projections with monthly/quarterly breakdowns
+           - Customer acquisition and retention economics
+           - Revenue diversification and risk mitigation
+           - International expansion and market penetration
+
+        5. MARKETING STRATEGY & ACQUISITION (Growth marketing)
+           - Customer acquisition channels with CAC analysis
+           - Conversion rates and funnel optimization
+           - Growth marketing tactics and viral mechanisms
+           - Brand building and market positioning
+           - Customer segmentation and targeting
+           - Marketing ROI and efficiency metrics
+
+        6. OPERATIONS PLAN & SCALABILITY (Operational excellence)
+           - Operational efficiency metrics and benchmarks
            - Scaling bottlenecks and solutions
-        7. FINANCIAL PROJECTIONS & METRICS
-           - Revenue, costs, and profitability
-           - Key ratios and benchmarks
-           - Cash flow projections
-        8. RISK ANALYSIS & MITIGATION
-           - Top risks with probability
-           - Mitigation strategies
-        9. IMPLEMENTATION TIMELINE & MILESTONES
-           - Key milestones with dates
+           - Supply chain and vendor management
+           - Quality control and process optimization
+           - Technology infrastructure and automation
+           - International expansion and localization
+
+        7. FINANCIAL PROJECTIONS & METRICS (Comprehensive financial analysis)
+           - Revenue, costs, and profitability projections
+           - Key ratios and financial health indicators
+           - Cash flow projections and working capital
+           - Break-even analysis and sensitivity testing
+           - Funding requirements and use of funds
+           - Exit strategy and valuation projections
+
+        8. RISK ANALYSIS & MITIGATION (Risk management)
+           - Top risks with probability and impact assessment
+           - Mitigation strategies and contingency plans
+           - Market risks and competitive threats
+           - Technology risks and technical challenges
+           - Financial risks and cash flow challenges
+           - Regulatory and compliance risks
+
+        9. IMPLEMENTATION TIMELINE & MILESTONES (Execution roadmap)
+           - Key milestones with specific dates and deliverables
            - Success metrics for each phase
-        10. FINAL GROWTH STRATEGY
-            - 3-5 actionable steps to scale up
-            - Priority order and timeline
-            - Expected outcomes and metrics
+           - Resource allocation and team requirements
+           - Critical path analysis and dependencies
+           - Risk mitigation timeline
+           - Quality gates and validation checkpoints
 
-        Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES.
-        Focus on EXECUTION and SCALABILITY.""",
+        10. FINAL GROWTH STRATEGY (Comprehensive execution plan)
+            - Immediate actions (Next 30 days) with specific tasks, owners, and timelines
+            - Short-term goals (3-6 months) with measurable milestones
+            - Long-term vision (6-12 months) with strategic objectives
+            - Resource requirements and investment needs
+            - Risk mitigation strategies and contingency plans
+            - Expected outcomes and ROI projections
+            - Success metrics and KPIs for tracking progress
+
+        Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES. Focus on EXECUTION, SCALABILITY, and MEASURABLE SUCCESS. Include edge cases, potential challenges, and alternative scenarios that could impact business success.""",
         
-        "Market Research": """Analyze this market research and provide QUANTIFIED insights:
+        "Market Research": """Analyze this market research and provide comprehensive, quantified insights with strategic depth:
 
-        1. MARKET SIZE & GROWTH METRICS
-           - TAM, SAM, SOM with specific numbers
-           - CAGR and growth drivers
-           - Regional breakdowns
-        2. KEY TRENDS & OPPORTUNITIES
-           - Emerging trends with adoption rates
-           - Market gaps and opportunities
-           - Timing for market entry
-        3. CUSTOMER SEGMENTS & BEHAVIOR
-           - Segment sizes and characteristics
-           - Customer acquisition costs
-           - Lifetime value projections
-        4. COMPETITOR LANDSCAPE & POSITIONING
-           - Market share of top competitors
-           - Competitive advantages and weaknesses
-           - Positioning opportunities
-        5. MARKET DRIVERS & BARRIERS
-           - Growth drivers with impact metrics
-           - Entry barriers and costs
-           - Regulatory requirements
-        6. OPPORTUNITIES & THREATS
-           - Market opportunities with sizes
-           - Threat assessment and mitigation
-           - Risk-reward analysis
-        7. REGULATORY & COMPLIANCE FACTORS
-           - Regulatory requirements and costs
-           - Compliance timeline and resources
-        8. FUTURE PREDICTIONS & FORECASTS
-           - Market evolution predictions
-           - Technology adoption curves
-           - Competitive landscape changes
-        9. ENTRY STRATEGY & TIMING
-           - Optimal entry timing
-           - Market entry costs and timeline
-           - Success probability factors
-        10. FINAL GROWTH STRATEGY
+        1. MARKET SIZE & GROWTH METRICS (Comprehensive market quantification)
+           - TAM, SAM, SOM with specific numbers and methodology
+           - CAGR and growth drivers with impact analysis
+           - Regional breakdowns and geographic opportunities
+           - Market maturity and evolution stages
+           - Seasonal patterns and cyclical factors
+           - Market segmentation and niche opportunities
+
+        2. KEY TRENDS & OPPORTUNITIES (Emerging market intelligence)
+           - Emerging trends with adoption rates and timing
+           - Market gaps and underserved customer needs
+           - Technology adoption curves and disruption potential
+           - Regulatory changes and policy impacts
+           - Consumer behavior shifts and preferences
+           - Industry convergence and collaboration opportunities
+
+        3. CUSTOMER SEGMENTS & BEHAVIOR (Deep customer insights)
+           - Segment sizes and characteristics with detailed profiles
+           - Customer acquisition costs and lifetime value
+           - Customer behavior patterns and decision-making factors
+           - Pain points and unmet needs by segment
+           - Customer journey and touchpoint analysis
+           - Brand loyalty and switching behavior
+
+        4. COMPETITOR LANDSCAPE & POSITIONING (Competitive intelligence)
+           - Market share of top competitors with trends
+           - Competitive advantages and weaknesses analysis
+           - Positioning opportunities and differentiation strategies
+           - Competitive response scenarios and strategies
+           - Market entry barriers and competitive moats
+           - Partnership and collaboration opportunities
+
+        5. MARKET DRIVERS & BARRIERS (Growth and constraint analysis)
+           - Growth drivers with impact metrics and timing
+           - Entry barriers and costs with mitigation strategies
+           - Regulatory requirements and compliance costs
+           - Technology adoption barriers and facilitators
+           - Economic factors and market sensitivity
+           - Social and cultural factors
+
+        6. OPPORTUNITIES & THREATS (Strategic risk-reward analysis)
+           - Market opportunities with sizes and timing
+           - Threat assessment and probability analysis
+           - Risk-reward analysis and prioritization
+           - Emerging competitive threats
+           - Market disruption scenarios
+           - Regulatory and policy risks
+
+        7. REGULATORY & COMPLIANCE FACTORS (Compliance landscape)
+           - Regulatory requirements and compliance costs
+           - Compliance timeline and resource requirements
+           - International regulatory differences
+           - Policy changes and their impact
+           - Compliance risk mitigation strategies
+           - Regulatory advantage opportunities
+
+        8. FUTURE PREDICTIONS & FORECASTS (Strategic foresight)
+           - Market evolution predictions with scenarios
+           - Technology adoption curves and disruption timing
+           - Competitive landscape changes and consolidation
+           - Regulatory evolution and policy trends
+           - Consumer behavior evolution and preferences
+           - Industry convergence and collaboration trends
+
+        9. ENTRY STRATEGY & TIMING (Market entry planning)
+           - Optimal entry timing with market readiness assessment
+           - Market entry costs and timeline with milestones
+           - Success probability factors and risk assessment
+           - Entry strategy options and recommendations
+           - Market penetration approach and tactics
+           - International expansion opportunities
+
+        10. FINAL GROWTH STRATEGY (Comprehensive action plan)
             - 3-5 actionable steps to capitalize on opportunities
-            - Priority order and timeline
-            - Expected outcomes and metrics
+            - Priority order and timeline with specific milestones
+            - Expected outcomes and metrics for success
+            - Resource requirements and investment needs
+            - Risk mitigation strategies and contingency plans
+            - Success metrics and KPIs for tracking progress
+            - Market monitoring and adaptation strategies
 
-        Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES.
-        Focus on ACTIONABLE INSIGHTS for startup success.""",
+        Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES. Focus on ACTIONABLE INSIGHTS for startup success. Include edge cases, market uncertainties, and alternative scenarios that could impact market entry and growth strategies.""",
         
-        "Financial Document": """Analyze this financial document and provide QUANTIFIED insights:
+        "Financial Document": """Analyze this financial document and provide comprehensive, quantified insights with strategic depth:
 
-        1. REVENUE STREAMS & PROJECTIONS
-           - Revenue breakdown by stream
-           - Growth rates and projections
-           - Seasonality and trends
-        2. COST STRUCTURE & EFFICIENCY
-           - Fixed vs variable costs
-           - Cost optimization opportunities
-           - Scaling cost implications
-        3. UNIT ECONOMICS & PROFITABILITY
-           - LTV, CAC, and payback period
-           - Gross and net margins
-           - Unit economics by segment
-        4. GROWTH PROJECTIONS & SCALABILITY
-           - Revenue growth rates (monthly/quarterly)
-           - Customer growth projections
-           - Scaling milestones and metrics
-        5. KEY FINANCIAL METRICS & KPIs
-           - Burn rate and runway
-           - Revenue per customer
-           - Customer acquisition efficiency
-        6. CASH FLOW ANALYSIS & MANAGEMENT
-           - Cash flow projections
-           - Working capital requirements
-           - Cash management strategies
-        7. FUNDING REQUIREMENTS & STRATEGY
-           - Funding needs with timeline
-           - Use of funds breakdown
-           - Funding milestones
-        8. BREAK-EVEN ANALYSIS & PROFITABILITY
-           - Break-even timeline
-           - Profitability projections
-           - Key profitability drivers
-        9. FINANCIAL RISKS & MITIGATION
-           - Risk factors with probability
-           - Financial stress testing
-           - Risk mitigation strategies
-        10. FINAL GROWTH STRATEGY
+        1. REVENUE STREAMS & PROJECTIONS (Revenue analysis)
+           - Revenue breakdown by stream with growth rates
+           - Growth rates and projections with seasonal patterns
+           - Seasonality and trends with cyclical analysis
+           - Revenue quality and sustainability factors
+           - Customer concentration and dependency risks
+           - International revenue and currency exposure
+
+        2. COST STRUCTURE & EFFICIENCY (Cost optimization)
+           - Fixed vs variable costs with break-even analysis
+           - Cost optimization opportunities and savings potential
+           - Scaling cost implications and economies of scale
+           - Cost structure benchmarking and industry comparison
+           - Operational efficiency metrics and improvements
+           - Technology automation and cost reduction potential
+
+        3. UNIT ECONOMICS & PROFITABILITY (Unit analysis)
+           - LTV, CAC, and payback period with trends
+           - Gross and net margins with industry benchmarks
+           - Unit economics by segment and customer type
+           - Profitability drivers and optimization opportunities
+           - Break-even analysis and sensitivity testing
+           - Margin expansion potential and strategies
+
+        4. GROWTH PROJECTIONS & SCALABILITY (Growth analysis)
+           - Revenue growth rates (monthly/quarterly) with drivers
+           - Customer growth projections and acquisition strategies
+           - Scaling milestones and metrics with timelines
+           - Growth constraints and bottleneck identification
+           - International expansion and market penetration
+           - Product expansion and diversification opportunities
+
+        5. KEY FINANCIAL METRICS & KPIs (Performance indicators)
+           - Burn rate and runway with funding requirements
+           - Revenue per customer and customer efficiency
+           - Customer acquisition efficiency and optimization
+           - Working capital requirements and management
+           - Cash conversion cycle and efficiency
+           - Return on investment and capital efficiency
+
+        6. CASH FLOW ANALYSIS & MANAGEMENT (Cash management)
+           - Cash flow projections with scenario analysis
+           - Working capital requirements and optimization
+           - Cash management strategies and investment policies
+           - Seasonal cash flow patterns and management
+           - International cash flow and currency management
+           - Cash flow risk mitigation and contingency planning
+
+        7. FUNDING REQUIREMENTS & STRATEGY (Funding analysis)
+           - Funding needs with timeline and milestones
+           - Use of funds breakdown with ROI projections
+           - Funding milestones and success criteria
+           - Funding sources and investor value proposition
+           - Debt vs equity financing analysis
+           - International funding and investor landscape
+
+        8. BREAK-EVEN ANALYSIS & PROFITABILITY (Profitability analysis)
+           - Break-even timeline with sensitivity analysis
+           - Profitability projections and drivers
+           - Key profitability drivers and optimization
+           - Profitability by segment and product line
+           - Profitability benchmarking and industry comparison
+           - Long-term profitability sustainability
+
+        9. FINANCIAL RISKS & MITIGATION (Risk management)
+           - Risk factors with probability and impact assessment
+           - Financial stress testing and scenario analysis
+           - Risk mitigation strategies and contingency plans
+           - Market and economic risk exposure
+           - Currency and international risk factors
+           - Regulatory and compliance financial risks
+
+        10. FINAL GROWTH STRATEGY (Financial execution plan)
             - 3-5 actionable steps to improve financial performance
-            - Priority order and timeline
-            - Expected outcomes and metrics
+            - Priority order and timeline with specific milestones
+            - Expected outcomes and metrics for success
+            - Resource requirements and investment needs
+            - Risk mitigation strategies and contingency plans
+            - Success metrics and KPIs for tracking progress
+            - Financial monitoring and adaptation strategies
 
-        Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES.
-        Focus on FINANCIAL VIABILITY and INVESTMENT POTENTIAL.""",
+        Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES. Focus on FINANCIAL VIABILITY, INVESTMENT POTENTIAL, and SUSTAINABLE GROWTH. Include edge cases, financial risks, and alternative scenarios that could impact financial performance and investment decisions.""",
         
-        "Unknown Document": """Analyze this document and provide startup-focused insights:
+        "Business Analysis": """Analyze this document and provide comprehensive, detailed business insights with strategic depth:
 
-        1. DOCUMENT OVERVIEW (2-3 sentences identifying content type)
-        2. BUSINESS RELEVANCE ASSESSMENT
+        1. OVERALL SUMMARY (Comprehensive business overview)
+           - Executive summary with key business metrics and positioning
+           - Core business model and value proposition identification
+           - Market position and competitive landscape overview
+           - Key success factors and risk factors assessment
+           - Business maturity and growth stage evaluation
+
+        2. COMPANY VISION AND OVERVIEW (Strategic positioning)
+           - Business type identification with industry classification
+           - Clear vision statement with strategic objectives
+           - Mission statement and core values identification
+           - Business model analysis and revenue streams
+           - Strategic positioning and market differentiation
+           - Growth trajectory and expansion plans
+
+        3. INDUSTRY AND MARKET ANALYSIS (Comprehensive market intelligence)
+           - Industry analysis with market size and growth trends
+           - Competitive positioning and market share analysis
+           - Market opportunities with size and timing assessment
+           - Risk factors with probability and impact analysis
+           - Regulatory environment and compliance requirements
+           - Market maturity and evolution stage assessment
+
+        4. FEEDBACK ANALYSIS (Customer and stakeholder insights)
+           4.1 POSITIVE POINTS (3-4 most common with specific examples)
+               - Customer satisfaction drivers and success factors
+               - Product/service strengths and competitive advantages
+               - Operational excellence indicators and best practices
+               - Brand perception and reputation strengths
+               - Customer loyalty and retention factors
+
+           4.2 NEGATIVE POINTS (3-4 most common with impact assessment)
+               - Customer pain points and dissatisfaction drivers
+               - Product/service weaknesses and improvement areas
+               - Operational challenges and inefficiencies
+               - Brand perception issues and reputation risks
+               - Customer churn and retention challenges
+
+           4.3 NON-BUSINESS RELATED FACTORS (Operational and environmental)
+               - Staff performance and customer service quality
+               - Cleanliness and facility maintenance standards
+               - Customer behavior and interaction patterns
+               - Environmental factors and location considerations
+               - Operational processes and efficiency factors
+
+           4.4 SPAM REVIEWS CHECK (Quality and authenticity assessment)
+               - Irrelevant or spam-like review identification
+               - Review authenticity and credibility assessment
+               - Data quality and reliability factors
+               - Review moderation and quality control needs
+               - Customer feedback validation and verification
+
+        5. FINAL VERDICT (Strategic conclusion and recommendations)
+           - Comprehensive conclusion combining all insights
+           - Strategic recommendations with implementation priority
+           - Improvement direction with specific action items
+           - Risk mitigation strategies and contingency plans
+           - Success metrics and KPIs for tracking progress
+           - Long-term strategic vision and growth roadmap
+
+        IMPORTANT: Provide detailed, comprehensive analysis for each section. Include specific examples, actionable insights, and strategic recommendations. Address edge cases, potential challenges, and alternative scenarios. Use clear sections with bullet points for clarity and actionable insights.""",
+        
+        "Unknown Document": """Analyze this document and provide comprehensive, startup-focused insights with strategic depth:
+
+        1. DOCUMENT OVERVIEW (Comprehensive content analysis)
+           - Content type identification with specific characteristics
+           - Document structure and organization quality
+           - Information completeness and reliability assessment
+           - Key themes and business relevance indicators
+           - Document purpose and intended audience
+           - Quality indicators and credibility factors
+
+        2. BUSINESS RELEVANCE ASSESSMENT (Strategic relevance)
            - How relevant is this to startup/business analysis?
-           - Key business themes identified
-           - Missing critical information
-        3. CONTENT QUALITY & STRUCTURE
-           - Information completeness
-           - Data reliability indicators
-           - Structural organization
-        4. POTENTIAL INSIGHTS EXTRACTION
-           - Actionable business insights
-           - Market intelligence opportunities
-           - Strategic implications
-        5. LIMITATIONS & GAPS
-           - Missing critical data
-           - Unreliable information
-           - Analysis constraints
-        6. RECOMMENDATIONS
-           - Additional information needed
-           - Alternative analysis approaches
-           - Next steps for better insights
-        7. FINAL GROWTH STRATEGY
-           - 3-5 actionable steps based on available information
-           - Priority order and timeline
-           - Expected outcomes and metrics
+           - Key business themes identified with examples
+           - Missing critical information and data gaps
+           - Business intelligence value and insights potential
+           - Strategic implications and decision-making value
+           - Competitive intelligence and market insights
 
-        Focus on what CAN be learned and what ADDITIONAL information is needed."""
+        3. CONTENT QUALITY & STRUCTURE (Quality assessment)
+           - Information completeness and comprehensiveness
+           - Data reliability indicators and validation factors
+           - Structural organization and presentation quality
+           - Source credibility and verification factors
+           - Methodology and analytical approach quality
+           - Bias identification and objectivity assessment
+
+        4. POTENTIAL INSIGHTS EXTRACTION (Value extraction)
+           - Actionable business insights with specific examples
+           - Market intelligence opportunities and data value
+           - Strategic implications and decision-making support
+           - Competitive intelligence and positioning insights
+           - Customer and market understanding opportunities
+           - Innovation and growth opportunity identification
+
+        5. LIMITATIONS & GAPS (Constraint analysis)
+           - Missing critical data and information gaps
+           - Unreliable information and validation challenges
+           - Analysis constraints and methodology limitations
+           - Data quality issues and reliability concerns
+           - Scope limitations and coverage gaps
+           - Temporal relevance and currency issues
+
+        6. RECOMMENDATIONS (Action planning)
+           - Additional information needed for better insights
+           - Alternative analysis approaches and methodologies
+           - Next steps for better insights and understanding
+           - Data collection and validation strategies
+           - Analysis enhancement and expansion opportunities
+           - Resource allocation and investment recommendations
+
+        7. FINAL GROWTH STRATEGY (Comprehensive action plan)
+           - 3-5 actionable steps based on available information
+           - Priority order and timeline with specific milestones
+           - Expected outcomes and metrics for success
+           - Resource requirements and investment needs
+           - Risk mitigation strategies and contingency plans
+           - Success metrics and KPIs for tracking progress
+           - Continuous improvement and adaptation strategies
+
+        Focus on what CAN be learned and what ADDITIONAL information is needed. Provide SPECIFIC examples, actionable insights, and strategic recommendations. Include edge cases, limitations, and alternative approaches that could enhance the analysis and decision-making process."""
     }
 
     # Use detected type or fallback to comprehensive analysis
@@ -402,9 +695,91 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
     def get_fallback_analysis(doc_type: str, content: str) -> str:
         """Provide template-based analysis when AI API is unavailable"""
         
-        if doc_type == "Google Forms Feedback":
-            return f"""
-# 📊 Google Forms Analysis Report
+                 if doc_type == "Google Forms Feedback":
+             return f"""
+# Google Forms Analysis Report
+
+## FORM OVERVIEW
+- **Document Type**: Google Forms Feedback
+- **Content Length**: {len(content)} characters
+- **Analysis Method**: Template-based (API unavailable)
+
+## CUSTOMER INSIGHTS OVERVIEW
+Based on the form structure and typical Google Forms patterns, here are the expected insights for startup growth.
+
+## FEEDBACK PATTERNS & TRENDS
+- **Form Engagement**: Analyze response completion rates and quality
+- **Response Quality**: Monitor answer depth, detail, and actionable insights
+- **Time Patterns**: Identify peak response times and engagement windows
+- **Segment Analysis**: Understand different user groups and their feedback patterns
+- **Trend Identification**: Track feedback evolution over time
+
+## PRODUCT/MARKET FIT ANALYSIS
+- **Customer Needs**: Extract pain points, desires, and unmet needs
+- **Market Validation**: Assess product-market fit signals and validation
+- **Segment Preferences**: Identify target customer groups and their priorities
+- **Feature Validation**: Understand which features resonate with users
+- **Gap Analysis**: Identify market gaps and opportunity areas
+
+## IMPROVEMENT PRIORITIES
+- **High-Impact Changes**: Focus on customer-requested features with high ROI
+- **Critical Issues**: Address immediate pain points and urgent concerns
+- **Long-term Strategy**: Plan for sustainable growth and scalability
+- **Technical Improvements**: Identify infrastructure and performance enhancements
+- **Process Optimization**: Streamline user experience and operational efficiency
+
+## CUSTOMER SENTIMENT ANALYSIS
+- **Overall Satisfaction**: Track sentiment trends and satisfaction scores
+- **Emotional Triggers**: Identify what drives engagement and satisfaction
+- **Brand Perception**: Monitor customer brand sentiment and loyalty
+- **Pain Point Analysis**: Understand customer frustrations and challenges
+- **Success Indicators**: Identify what customers love and value most
+
+## COMPETITIVE ADVANTAGE OPPORTUNITIES
+- **Unique Features**: Highlight differentiation points and competitive edges
+- **Market Gaps**: Identify underserved customer needs and opportunities
+- **Positioning**: Strengthen competitive positioning and market differentiation
+- **Innovation Areas**: Discover new feature and service opportunities
+- **Partnership Potential**: Identify collaboration and integration opportunities
+
+## GROWTH STRATEGY & SCALING
+- **Customer Acquisition**: Optimize acquisition channels and conversion rates
+- **Retention**: Improve customer loyalty strategies and engagement
+- **Expansion**: Identify new market opportunities and customer segments
+- **Pricing Strategy**: Optimize pricing based on customer feedback and value
+- **International Growth**: Explore expansion into new markets and regions
+
+## FINAL GROWTH STRATEGY
+1. **Immediate Actions** (Next 30 days)
+   - Analyze form responses for quick wins and immediate improvements
+   - Implement high-impact changes based on customer feedback
+   - Set up response monitoring and feedback collection systems
+   - Address critical pain points and urgent customer concerns
+   - Establish feedback response and customer communication processes
+
+2. **Short-term Goals** (3-6 months)
+   - Optimize form structure and questions based on feedback analysis
+   - Implement customer-requested features and improvements
+   - Establish comprehensive feedback collection and analysis processes
+   - Develop customer satisfaction measurement and tracking systems
+   - Create customer feedback response and follow-up procedures
+
+3. **Long-term Vision** (6-12 months)
+   - Scale successful feedback mechanisms across all customer touchpoints
+   - Expand to new customer segments and market opportunities
+   - Build data-driven decision culture and customer-centric processes
+   - Develop predictive analytics for customer needs and preferences
+   - Create comprehensive customer experience optimization framework
+
+## RISK MITIGATION & CONTINGENCIES
+- **Data Quality**: Ensure feedback accuracy and representativeness
+- **Response Bias**: Address potential sampling and response biases
+- **Implementation Challenges**: Plan for technical and operational hurdles
+- **Customer Expectations**: Manage expectations around feedback implementation
+- **Competitive Response**: Prepare for competitive reactions and market changes
+
+---
+*Note: This is a comprehensive template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
 
 ## 🔍 FORM OVERVIEW
 - **Document Type**: Google Forms Feedback
@@ -461,14 +836,14 @@ Based on the form structure and typical Google Forms patterns, here are the expe
    - Build data-driven decision culture
 
 ---
-*Note: This is a template analysis. For detailed AI-powered insights, ensure your Google API key has available quota.*
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
         
         elif doc_type == "Startup Document":
             return f"""
-# 🚀 Startup Document Analysis Report
+# Startup Document Analysis Report
 
-## 🔍 DOCUMENT OVERVIEW
+## DOCUMENT OVERVIEW
 - **Document Type**: Startup Document
 - **Content Length**: {len(content)} characters
 - **Analysis Method**: Template-based (API unavailable)
@@ -533,7 +908,7 @@ This startup document has been analyzed for key growth indicators and strategic 
    - Prepare for funding rounds
 
 ---
-*Note: This is a template analysis. For detailed AI-powered insights, ensure your Google API key has available quota.*
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
         
         else:
@@ -580,7 +955,7 @@ This document has been analyzed for startup and business relevance.
    - Build sustainable competitive advantage
 
 ---
-*Note: This is a template analysis. For detailed AI-powered insights, ensure your Google API key has available quota.*
+*Note: This is a template analysis. For detailed AI-powered insights, ensure your OpenAI API key has available quota.*
             """
 
     # Try AI analysis first, fallback to template if API fails
@@ -702,15 +1077,27 @@ Document Content:
 
         # Compose final prompt with RAG context and startup-analyst persona
         prompt = f"""
-You are a seasoned startup analyst and business consultant with 15+ years of experience. Using ONLY the provided RAG Context, produce a concise, structured analysis with clear section headers and bullet points where helpful. If a section lacks evidence in the RAG Context, write "Not found" for that section. Do not invent facts.
+You are a seasoned startup analyst and business consultant with 15+ years of experience. Using ONLY the provided RAG Context, produce a comprehensive, detailed analysis with clear section headers and bullet points where helpful. If a section lacks evidence in the RAG Context, write "Not found" for that section. Do not invent facts.
 
 IMPORTANT: Write in a professional, business-focused tone. Use minimal emojis and maintain a formal yet accessible style suitable for startup founders and investors.
 
+CRITICAL REQUIREMENTS:
+1. Provide DETAILED, COMPREHENSIVE analysis for each section
+2. Include SPECIFIC examples, numbers, and actionable insights
+3. Address edge cases and potential challenges in each section
+4. Provide alternative scenarios and contingency plans
+5. Include risk assessments and mitigation strategies
+6. Give concrete, implementable recommendations
+7. Use bullet points and structured formatting for clarity
+8. Aim for 200-400 words per major section for thorough coverage
+
 Focus on ACTIONABLE insights that help founders:
-1. Scale their startup
-2. Correct mistakes
-3. Identify growth opportunities
-4. Make data-driven decisions
+1. Scale their startup with specific strategies
+2. Correct mistakes with detailed solutions
+3. Identify growth opportunities with implementation plans
+4. Make data-driven decisions with clear metrics
+5. Handle edge cases and unexpected challenges
+6. Plan for multiple scenarios and contingencies
 
 RAG Context (retrieved chunks per section):
 {rag_context}
