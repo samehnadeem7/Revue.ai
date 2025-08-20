@@ -36,6 +36,8 @@ genai.configure(api_key=api_key)
 # Database configuration
 from config import DATABASE_URL
 
+# Debug: Log the DATABASE_URL being used (remove this after fixing)
+print(f"DEBUG: Using DATABASE_URL: {DATABASE_URL}")
 
 # Create uploads directory
 UPLOAD_DIR = "uploads"
