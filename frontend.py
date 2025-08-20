@@ -13,7 +13,7 @@ st.set_page_config(
 
 # Title and description
 st.title("🚀 Startup Document Analyzer")
-st.markdown("AI-powered analysis of startup documents with quantified insights")
+st.markdown("AI-powered analysis of startup documents with quantified insights and growth strategies")
 
 # Sidebar for navigation
 st.sidebar.title("Navigation")
@@ -25,7 +25,7 @@ page = st.sidebar.selectbox(
 # API endpoint - can be changed for deployment
 API_URL = st.sidebar.text_input(
     "API URL", 
-    value="   https://revue-ai-1.onrender.com",
+    value="https://revue-ai-1.onrender.com",
     help="Enter the URL of your FastAPI backend"
 )
 
@@ -36,25 +36,20 @@ if page == "Upload & Analyze":
     uploaded_file = st.file_uploader(
         "Choose a PDF file",
         type=['pdf'],
-        help="Upload a startup document (pitch deck, business plan, etc.)"
+        help="Upload any startup document (pitch deck, business plan, market research, financial model, customer feedback, etc.)"
     )
     
-    # Document type selection
-    document_type = st.selectbox(
-        "Document Type",
-        ["Pitch Deck", "Business Plan", "Market Research", "Financial Model"],
-        help="Select the type of document for better analysis"
-    )
+    # Document type info
+    st.info("💡 **Smart Analysis**: Our AI automatically detects document type and provides relevant insights!")
     
     if uploaded_file is not None and st.button("🚀 Analyze Document"):
-        with st.spinner("Analyzing document..."):
+        with st.spinner("Analyzing document with AI..."):
             try:
                 # Prepare file for upload
                 files = {"file": uploaded_file}
-                data = {"document_type": document_type}
                 
-                # Make API request
-                response = requests.post(f"{API_URL}/upload-pdf/", files=files, data=data)
+                # Make API request (no document type needed - auto-detected)
+                response = requests.post(f"{API_URL}/upload-pdf/", files=files)
                 
                 if response.status_code == 200:
                     result = response.json()
@@ -163,4 +158,4 @@ elif page == "Analytics Dashboard":
 
 # Footer
 st.markdown("---")
-st.markdown("Built with FastAPI, PyMuPDF, and Streamlit") 
+st.markdown("Built with FastAPI, PyMuPDF, RAG-powered AI, and Streamlit") 

@@ -93,24 +93,107 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         print(f"Error extracting text: {e}")
         return ""
 
-def analyze_startup_document(text: str, document_type: str) -> Dict:
+def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> Dict:
     """Analyze document based on type and return structured insights"""
 
-    analysis_prompts = {
-        "Business Analysis": """Analyze this document and provide:
-        1. Overall Summary (2-3 sentences)
-        2. Company Vision and Overview(identify the type of business from the document, then propose a clear vision statement and a short overview).
-        3. Industry and Market Analysis(analyze the industry the business belongs to, its competitive positioning, market opportunities, and risks).
-        4. Feedback Analysis
-           4.1 Positive Points (3-4 most common)
-           4.2 Negative Points (3-4 most common)
-           4.3 Non-business Related (staff, cleanliness, behaviour, etc.)
-           4.4 Spam Reviews Check – identify if any reviews appear irrelevant or spam-like (summarize in 1–2 sentences).
-        5. Final Verdict(a thoughtful conclusion combining all the above insights with an intelligent recommendation or improvement direction).
-
-        Format in clear sections with bullet points where relevant.""",
+    # Auto-detect document type based on content
+    def detect_document_type(text: str) -> str:
+        text_lower = text.lower()
         
-        "Pitch Deck": """Analyze this pitch deck and provide QUANTIFIED insights:
+        # Check for Google Forms indicators
+        if any(keyword in text_lower for keyword in ["google forms", "form responses", "survey", "questionnaire", "feedback form"]):
+            return "Google Forms Feedback"
+        
+        # Check for startup indicators
+        startup_keywords = ["startup", "pitch", "business plan", "market", "revenue", "funding", "investor", "vc", "angel", "seed", "series a", "series b", "exit", "ipo", "acquisition"]
+        if any(keyword in text_lower for keyword in startup_keywords):
+            return "Startup Document"
+        
+        # Check for financial indicators
+        financial_keywords = ["financial", "revenue", "profit", "cost", "margin", "cash flow", "balance sheet", "income statement", "ebitda", "roi"]
+        if any(keyword in text_lower for keyword in financial_keywords):
+            return "Financial Document"
+        
+        # Check for market research indicators
+        market_keywords = ["market research", "competitor", "industry", "trend", "analysis", "survey", "customer", "demographic"]
+        if any(keyword in text_lower for keyword in market_keywords):
+            return "Market Research"
+        
+        return "Unknown Document"
+
+    # Validate document content for startup analysis
+    def validate_startup_content(text: str) -> bool:
+        text_lower = text.lower()
+        
+        # Minimum content requirements
+        if len(text.strip()) < 100:
+            return False
+        
+        # Check for business-related content
+        business_indicators = [
+            "business", "company", "startup", "product", "service", "market", "customer", 
+            "revenue", "strategy", "plan", "goal", "objective", "target", "growth"
+        ]
+        
+        business_score = sum(1 for indicator in business_indicators if indicator in text_lower)
+        
+        # Check for random/gibberish content
+        random_indicators = [
+            "lorem ipsum", "random text", "test document", "sample text", "placeholder",
+            "asdf", "qwerty", "123456", "abcdef"
+        ]
+        
+        random_score = sum(1 for indicator in random_indicators if indicator in text_lower)
+        
+        # Document is valid if it has business content and minimal random content
+        return business_score >= 3 and random_score < 2
+
+    # Auto-detect document type
+    detected_type = detect_document_type(text)
+    
+    # Validate content for startup analysis
+    if not validate_startup_content(text):
+        raise HTTPException(
+            status_code=400, 
+            detail="Document content is not suitable for startup analysis. Please upload a business-related document (pitch deck, business plan, market research, financial model, or customer feedback)."
+        )
+
+    analysis_prompts = {
+        "Google Forms Feedback": """Analyze this customer feedback and provide actionable startup insights:
+
+        1. CUSTOMER INSIGHTS OVERVIEW (2-3 sentences with key metrics)
+        2. FEEDBACK PATTERNS & TRENDS
+           - Most common positive feedback themes
+           - Most critical pain points identified
+           - Customer satisfaction patterns
+        3. PRODUCT/MARKET FIT ANALYSIS
+           - How well the product meets customer needs
+           - Market gaps and opportunities
+           - Customer segment preferences
+        4. IMPROVEMENT PRIORITIES
+           - High-impact, low-effort improvements
+           - Critical issues requiring immediate attention
+           - Long-term enhancement opportunities
+        5. CUSTOMER SENTIMENT ANALYSIS
+           - Overall sentiment score and trends
+           - Emotional triggers and pain points
+           - Brand perception insights
+        6. COMPETITIVE ADVANTAGE OPPORTUNITIES
+           - Unique value propositions identified
+           - Differentiation opportunities
+           - Competitive positioning insights
+        7. GROWTH STRATEGY & SCALING
+           - Customer acquisition insights
+           - Retention improvement strategies
+           - Expansion opportunities
+        8. FINAL GROWTH STRATEGY
+           - 3-5 actionable steps to scale up
+           - Priority order for implementation
+           - Expected impact and timeline
+
+        Focus on ACTIONABLE insights that drive growth and customer satisfaction.""",
+        
+        "Startup Document": """Analyze this startup document and provide QUANTIFIED insights:
 
         1. EXECUTIVE SUMMARY (2-3 sentences with key metrics)
         2. VALUE PROPOSITION & COMPETITIVE ADVANTAGE
@@ -136,9 +219,10 @@ def analyze_startup_document(text: str, document_type: str) -> Dict:
         7. TEAM STRENGTHS & EXECUTION CAPABILITY
         8. INVESTMENT ASK & USE OF FUNDS
         9. RISK ASSESSMENT & MITIGATION
-        10. GROWTH STRATEGY & SCALABILITY
-            - Expansion plans with timelines
-            - Scaling metrics and milestones
+        10. FINAL GROWTH STRATEGY
+            - 3-5 specific steps to scale up
+            - Priority order and timeline
+            - Expected outcomes and metrics
 
         Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES wherever possible.
         Focus on how this startup will STAND OUT and SCALE.""",
@@ -176,9 +260,10 @@ def analyze_startup_document(text: str, document_type: str) -> Dict:
         9. IMPLEMENTATION TIMELINE & MILESTONES
            - Key milestones with dates
            - Success metrics for each phase
-        10. SUCCESS METRICS & KPIs
-            - Measurable success indicators
-            - Tracking and optimization plans
+        10. FINAL GROWTH STRATEGY
+            - 3-5 actionable steps to scale up
+            - Priority order and timeline
+            - Expected outcomes and metrics
 
         Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES.
         Focus on EXECUTION and SCALABILITY.""",
@@ -220,15 +305,15 @@ def analyze_startup_document(text: str, document_type: str) -> Dict:
            - Optimal entry timing
            - Market entry costs and timeline
            - Success probability factors
-        10. INVESTMENT OPPORTUNITY ASSESSMENT
-            - Market attractiveness score
-            - Investment requirements
-            - Expected returns and timeline
+        10. FINAL GROWTH STRATEGY
+            - 3-5 actionable steps to capitalize on opportunities
+            - Priority order and timeline
+            - Expected outcomes and metrics
 
         Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES.
         Focus on ACTIONABLE INSIGHTS for startup success.""",
         
-        "Financial Model": """Analyze this financial document and provide QUANTIFIED insights:
+        "Financial Document": """Analyze this financial document and provide QUANTIFIED insights:
 
         1. REVENUE STREAMS & PROJECTIONS
            - Revenue breakdown by stream
@@ -266,15 +351,49 @@ def analyze_startup_document(text: str, document_type: str) -> Dict:
            - Risk factors with probability
            - Financial stress testing
            - Risk mitigation strategies
-        10. INVESTMENT HIGHLIGHTS & RETURNS
-            - Investment attractiveness
-            - Expected returns and timeline
-            - Exit strategy considerations
+        10. FINAL GROWTH STRATEGY
+            - 3-5 actionable steps to improve financial performance
+            - Priority order and timeline
+            - Expected outcomes and metrics
 
         Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES.
-        Focus on FINANCIAL VIABILITY and INVESTMENT POTENTIAL."""
+        Focus on FINANCIAL VIABILITY and INVESTMENT POTENTIAL.""",
+        
+        "Unknown Document": """Analyze this document and provide startup-focused insights:
+
+        1. DOCUMENT OVERVIEW (2-3 sentences identifying content type)
+        2. BUSINESS RELEVANCE ASSESSMENT
+           - How relevant is this to startup/business analysis?
+           - Key business themes identified
+           - Missing critical information
+        3. CONTENT QUALITY & STRUCTURE
+           - Information completeness
+           - Data reliability indicators
+           - Structural organization
+        4. POTENTIAL INSIGHTS EXTRACTION
+           - Actionable business insights
+           - Market intelligence opportunities
+           - Strategic implications
+        5. LIMITATIONS & GAPS
+           - Missing critical data
+           - Unreliable information
+           - Analysis constraints
+        6. RECOMMENDATIONS
+           - Additional information needed
+           - Alternative analysis approaches
+           - Next steps for better insights
+        7. FINAL GROWTH STRATEGY
+           - 3-5 actionable steps based on available information
+           - Priority order and timeline
+           - Expected outcomes and metrics
+
+        Focus on what CAN be learned and what ADDITIONAL information is needed."""
     }
 
+    # Use detected type or fallback to comprehensive analysis
+    prompt_type = detected_type if detected_type in analysis_prompts else "Startup Document"
+    
+    # Enhanced RAG implementation with better error handling
     def chunk_text(input_text: str, max_chars: int = 1500) -> List[str]:
         paragraphs = re.split(r"\n\s*\n", input_text)
         chunks: List[str] = []
@@ -338,13 +457,13 @@ def analyze_startup_document(text: str, document_type: str) -> Dict:
         # Fallback if parsing fails
         if not queries:
             queries = [
-                "Overall Summary",
-                "Company Vision and Overview",
-                "Industry and Market Analysis",
-                "Positive Points",
-                "Negative Points",
-                "Non-business Related",
-                "Final Verdict",
+                "Document Overview",
+                "Business Relevance",
+                "Key Insights",
+                "Market Analysis",
+                "Growth Opportunities",
+                "Action Items",
+                "Final Growth Strategy",
             ]
         return queries
 
@@ -361,12 +480,12 @@ def analyze_startup_document(text: str, document_type: str) -> Dict:
         if not chunk_embeddings:
             # Fallback: if embeddings failed entirely, use original non-RAG prompt
             business_analyst_prompt = f"""
-You are a seasoned business analyst. Provide structured, practical insights with bullet points, citing specific evidence from the document when possible. If information is missing, state "Not found".
+You are a seasoned startup analyst and business consultant. Provide structured, practical insights with bullet points, citing specific evidence from the document when possible. If information is missing, state "Not found". Focus on actionable growth strategies.
 
 Document Content:
 {text}
 
-{analysis_prompts.get(document_type, analysis_prompts["Business Analysis"]) }
+{analysis_prompts.get(prompt_type, analysis_prompts["Startup Document"]) }
 """
             model = genai.GenerativeModel('gemini-1.5-flash')
             response = model.generate_content(business_analyst_prompt, generation_config={"temperature": 0.9})
@@ -375,7 +494,7 @@ Document Content:
         embeddings_matrix = np.vstack(chunk_embeddings)
 
         # Build per-section retrieval
-        section_names = parse_section_queries(analysis_prompts.get(document_type, list(analysis_prompts.values())[0]))
+        section_names = parse_section_queries(analysis_prompts.get(prompt_type, list(analysis_prompts.values())[0]))
         section_to_context: List[Tuple[str, str]] = []
         for section in section_names:
             try:
@@ -397,15 +516,21 @@ Document Content:
             rag_context_lines.append(f"### {section}\n{context if context else 'No relevant content found.'}")
         rag_context = "\n\n".join(rag_context_lines)
 
-        # Compose final prompt with RAG context and business-analyst persona
+        # Compose final prompt with RAG context and startup-analyst persona
         prompt = f"""
-You are a seasoned business analyst. Using ONLY the provided RAG Context, produce a concise, structured analysis with clear section headers and bullet points where helpful. If a section lacks evidence in the RAG Context, write "Not found" for that section. Do not invent facts.
+You are a seasoned startup analyst and business consultant with 15+ years of experience. Using ONLY the provided RAG Context, produce a concise, structured analysis with clear section headers and bullet points where helpful. If a section lacks evidence in the RAG Context, write "Not found" for that section. Do not invent facts.
+
+Focus on ACTIONABLE insights that help founders:
+1. Scale their startup
+2. Correct mistakes
+3. Identify growth opportunities
+4. Make data-driven decisions
 
 RAG Context (retrieved chunks per section):
 {rag_context}
 
 Task:
-{analysis_prompts.get(document_type, list(analysis_prompts.values())[0]) }
+{analysis_prompts.get(prompt_type, list(analysis_prompts.values())[0]) }
 """
 
         model = genai.GenerativeModel('gemini-1.5-flash')
@@ -416,10 +541,9 @@ Task:
 
 @app.post("/upload-pdf/")
 async def upload_pdf(
-    file: UploadFile = File(...),
-    document_type: str = "Business Analysis"  # Default type
+    file: UploadFile = File(...)
 ):
-    """Upload and automatically analyze startup document"""
+    """Upload and automatically analyze startup document (auto-detects type)"""
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files allowed")
 
@@ -435,8 +559,11 @@ async def upload_pdf(
         if not pdf_text:
             raise HTTPException(status_code=500, detail="Could not extract text from document")
         
-        # Get analysis
-        analysis = analyze_startup_document(pdf_text, document_type)
+        # Auto-detect document type and get analysis
+        analysis = analyze_startup_document(pdf_text)
+        
+        # Extract detected document type from analysis
+        detected_type = "Auto-Detected"
         
         # Store analysis in database
         conn = get_db_connection()
@@ -445,7 +572,7 @@ async def upload_pdf(
         cursor.execute('''
             INSERT INTO analysis_history (filename, document_type, analysis_data)
             VALUES (?, ?, ?)
-        ''', (file.filename, document_type, json.dumps(analysis["analysis"])))
+        ''', (file.filename, detected_type, json.dumps(analysis["analysis"])))
         
         # Update metrics
         cursor.execute('''
@@ -455,7 +582,7 @@ async def upload_pdf(
             DO UPDATE SET 
                 analysis_count = user_metrics.analysis_count + 1,
                 last_analyzed = CURRENT_TIMESTAMP
-        ''', (document_type,))
+        ''', (detected_type,))
         
         # Get the inserted ID
         analysis_id = cursor.lastrowid
@@ -465,7 +592,7 @@ async def upload_pdf(
         
         return {
             "filename": file.filename,
-            "document_type": document_type,
+            "document_type": detected_type,
             "analysis": analysis["analysis"],
             "analysis_id": analysis_id
         }
