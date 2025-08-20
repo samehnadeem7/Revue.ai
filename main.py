@@ -2,11 +2,11 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
-import pdfplumber  # PDF text extraction library
+import fitz  # PyMuPDF library
 import google.generativeai as genai
 from dotenv import load_dotenv
 from typing import Dict, List
-import psycopg2
+import sqlite3
 from datetime import datetime
 import json
 
@@ -36,43 +36,28 @@ genai.configure(api_key=api_key)
 # Database configuration
 from config import DATABASE_URL
 
-# Debug: Log the DATABASE_URL being used (remove this after fixing)
-print(f"DEBUG: Using DATABASE_URL: {DATABASE_URL}")
-
 # Create uploads directory
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Database setup
 def get_db_connection():
-    """Get database connection with optimized pool settings"""
-    return psycopg2.connect(
-        DATABASE_URL,
-        # Connection pooling settings
-        keepalives=1,
-        keepalives_idle=30,
-        keepalives_interval=10,
-        keepalives_count=5,
-        # Timeout settings
-        connect_timeout=10,
-        options='-c statement_timeout=30000',  # 30 seconds
-        # Connection settings
-        application_name='startup-analyzer-api'
-    )
+    """Get SQLite database connection"""
+    return sqlite3.connect('./startup_analyzer.db')
 
 def init_db():
-    """Initialize PostgreSQL database"""
+    """Initialize SQLite database"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     # Create analysis history table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS analysis_history (
-            id BIGSERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             filename TEXT NOT NULL,
             document_type TEXT NOT NULL,
             analysis_data TEXT NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             user_id TEXT DEFAULT 'anonymous'
         )
     ''')
@@ -80,10 +65,10 @@ def init_db():
     # Create user metrics table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_metrics (
-            id BIGSERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             document_type TEXT NOT NULL UNIQUE,
             analysis_count INTEGER DEFAULT 1,
-            last_analyzed TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     
@@ -96,12 +81,12 @@ def init_db():
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extract text from PDF file"""
     try:
-        with pdfplumber.open(pdf_path) as doc:
-            text = ""
-            for page in doc.pages:
-                if page.extract_text():
-                    text += page.extract_text() + "\n"
-            return text
+        doc = fitz.open(pdf_path)
+        text = ""
+        for page in doc:
+            text += page.get_text()
+        doc.close()
+        return text
     except Exception as e:
         print(f"Error extracting text: {e}")
         return ""
@@ -333,22 +318,21 @@ async def upload_pdf(
         
         cursor.execute('''
             INSERT INTO analysis_history (filename, document_type, analysis_data)
-            VALUES (%s, %s, %s)
+            VALUES (?, ?, ?)
         ''', (file.filename, document_type, json.dumps(analysis["analysis"])))
         
         # Update metrics
         cursor.execute('''
             INSERT INTO user_metrics (document_type, analysis_count, last_analyzed)
-            VALUES (%s, 1, NOW())
+            VALUES (?, 1, CURRENT_TIMESTAMP)
             ON CONFLICT (document_type) 
             DO UPDATE SET 
                 analysis_count = user_metrics.analysis_count + 1,
-                last_analyzed = NOW()
+                last_analyzed = CURRENT_TIMESTAMP
         ''', (document_type,))
         
         # Get the inserted ID
-        cursor.execute("SELECT LASTVAL()")
-        analysis_id = cursor.fetchone()[0]
+        analysis_id = cursor.lastrowid
         
         conn.commit()
         conn.close()
@@ -413,10 +397,10 @@ async def get_analytics():
     cursor.execute('SELECT COUNT(*) FROM analysis_history')
     total_analyses = cursor.fetchone()[0]
     
-    # Get recent activity
+    # Get recent activity (SQLite doesn't support INTERVAL, so we'll use a simple approach)
     cursor.execute('''
         SELECT COUNT(*) FROM analysis_history 
-        WHERE created_at >= NOW() - INTERVAL '7 days'
+        WHERE created_at >= datetime('now', '-7 days')
     ''')
     recent_analyses = cursor.fetchone()[0]
     
@@ -441,7 +425,7 @@ async def get_history(limit: int = 10):
         SELECT filename, document_type, created_at, id
         FROM analysis_history 
         ORDER BY created_at DESC 
-        LIMIT %s
+        LIMIT ?
     ''', (limit,))
     
     history = cursor.fetchall()
@@ -453,7 +437,7 @@ async def get_history(limit: int = 10):
                 "id": row[3],
                 "filename": row[0],
                 "document_type": row[1],
-                "created_at": row[2].isoformat() if row[2] else None
+                "created_at": row[2]
             }
             for row in history
         ]
