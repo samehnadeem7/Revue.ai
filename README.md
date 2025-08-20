@@ -1,151 +1,214 @@
-# Revue.ai - Startup Document Analyzer
+# 🚀 Startup Document Analyzer
 
-AI-powered analysis of startup documents using FastAPI backend and React frontend.
+**AI-powered analysis of startup documents with quantified insights and growth strategies using RAG (Retrieval-Augmented Generation)**
 
-## Features
+## ✨ Features
 
-- **Document Types**: Pitch Decks, Business Plans, Market Research, Financial Models
-- **AI Analysis**: Powered by Google's Gemini AI
-- **Minimalist Design**: Clean, professional interface
-- **Instant Results**: Upload PDF and get structured insights
+- **📄 PDF Analysis**: Upload any startup document (pitch deck, business plan, market research, financial model, customer feedback)
+- **🤖 AI-Powered**: Uses Google Gemini Pro with RAG for intelligent, context-aware analysis
+- **🔍 Smart Detection**: Automatically detects document type without manual selection
+- **📊 Comprehensive Insights**: 200-400 words per section with actionable recommendations
+- **🔗 Google Forms Integration**: Convert Google Forms URLs to PDF for instant analysis
+- **💾 Data Persistence**: SQLite database stores analysis history and user metrics
+- **📈 Analytics Dashboard**: Usage statistics and document type distribution
+- **☁️ Cloud Ready**: Deployable on Render (backend) + Streamlit Cloud (frontend)
 
-## Project Structure
+## 🏗️ Architecture
 
 ```
-├── main.py              # FastAPI backend
-├── frontend.py          # Streamlit frontend (legacy)
-├── frontend/            # React frontend
-│   ├── src/            # React source code
-│   │   ├── App.js      # Main React component
-│   │   ├── App.css     # Styles
-│   │   └── index.js    # React entry point
-│   ├── public/         # Static files
-│   ├── package.json    # React dependencies
-│   └── node_modules/   # Installed packages
-├── requirements.txt    # Python dependencies
-└── render.yaml         # Deployment config
+Frontend (Streamlit) ←→ Backend (FastAPI) ←→ Google Gemini API
+                              ↓
+                        SQLite Database
+                              ↓
+                        RAG System (Text Chunking + Embeddings)
 ```
 
-## Local Development Setup
+## 🚀 Quick Start
 
 ### Prerequisites
 - Python 3.11+
-- Node.js 16+
+- Google Gemini API Key
 - Git
 
-### Backend Setup
+### Local Development
 
-1. **Clone and navigate to project:**
+1. **Clone the repository**
    ```bash
-   cd C:\Users\sameh\OneDrive\Documents\fastapi
+   git clone <your-repo-url>
+   cd fastapi
    ```
 
-2. **Activate virtual environment:**
+2. **Install dependencies**
    ```bash
-   .venv\Scripts\activate
-   ```
-
-3. **Install Python dependencies:**
-   ```bash
+   # Backend dependencies
    pip install -r requirements.txt
+   
+   # Frontend dependencies
+   pip install -r requirements-streamlit.txt
    ```
 
-4. **Set up environment variables:**
-   - Create `.env` file with your Google API key:
-   ```
-   GOOGLE_API_KEY=your_google_api_key_here
-   ```
-
-5. **Run backend:**
+3. **Set up environment variables**
    ```bash
-   uvicorn main:app --reload
+   # Copy example file
+   cp env.example .env
+   
+   # Edit .env with your API key
+   GOOGLE_API_KEY=your-actual-gemini-api-key
    ```
-   Backend will run on http://localhost:8000
 
-### Frontend Setup
-
-1. **Navigate to frontend directory:**
+4. **Run the application**
    ```bash
-   cd frontend
+   # Terminal 1: Start FastAPI backend
+   python main.py
+   
+   # Terminal 2: Start Streamlit frontend
+   streamlit run frontend.py
    ```
 
-2. **Install Node.js dependencies:**
-   ```bash
-   npm install
-   ```
+5. **Access the application**
+   - Backend: http://localhost:8000
+   - Frontend: http://localhost:8501
+   - API Docs: http://localhost:8000/docs
 
-3. **Create environment file:**
-   ```bash
-   copy env.example .env.local
-   ```
-
-4. **Run React frontend:**
-   ```bash
-   npm start
-   ```
-   Frontend will run on http://localhost:3000
-
-## Usage
-
-1. Open http://localhost:3000 in your browser
-2. Select document type (Pitch Deck, Business Plan, etc.)
-3. Upload a PDF file
-4. Click "Analyze Document"
-5. View structured AI analysis results
-
-## Deployment
+## ☁️ Cloud Deployment
 
 ### Backend (Render)
-1. Push code to GitHub
-2. Create Web Service on Render
-3. Connect GitHub repository
-4. Set environment variables:
-   - `GOOGLE_API_KEY`: Your Google API key
-5. Deploy with:
-   - Build: `pip install -r requirements.txt`
-   - Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
-### Frontend (Vercel/Netlify)
-1. Update `.env.local` with your backend URL:
-   ```
-   REACT_APP_API_URL=https://your-render-app.onrender.com
-   ```
-2. Build: `npm run build`
-3. Deploy build folder to Vercel/Netlify
+1. **Connect your GitHub repository to Render**
+2. **Create a new Web Service**
+3. **Configure environment variables in Render dashboard:**
+   - `GOOGLE_API_KEY`: Your Google Gemini API key
+4. **Deploy automatically on git push**
 
-## Git Workflow
+### Frontend (Streamlit Cloud)
 
+1. **Connect your GitHub repository to Streamlit Cloud**
+2. **Set the main file path to `frontend.py`**
+3. **Deploy automatically on git push**
+
+## 📚 API Endpoints
+
+- `POST /upload-pdf/` - Upload and analyze PDF documents
+- `POST /convert-google-form/` - Convert Google Forms to PDF and analyze
+- `GET /analytics/` - Get usage analytics and insights
+- `GET /history/` - Get analysis history
+- `GET /health` - Health check for deployment monitoring
+
+## 🔧 Configuration
+
+### Environment Variables
+- `GOOGLE_API_KEY`: Your Google Gemini API key (required)
+
+### Files
+- `main.py`: FastAPI backend with AI analysis logic
+- `frontend.py`: Streamlit frontend interface
+- `config.py`: Configuration settings
+- `requirements.txt`: Backend Python dependencies
+- `requirements-streamlit.txt`: Frontend Python dependencies
+- `render.yaml`: Render deployment configuration
+- `.streamlit/config.toml`: Streamlit Cloud configuration
+
+## 🧠 How It Works
+
+### 1. Document Processing
+- PDF text extraction using PyMuPDF
+- Content validation for business relevance
+- Automatic document type detection
+
+### 2. RAG Analysis
+- Text chunking into manageable segments
+- Embedding generation for semantic search
+- Context retrieval for relevant content
+- AI analysis with retrieved context
+
+### 3. AI Generation
+- Google Gemini Pro processes the analysis
+- Structured output with clear sections
+- Actionable insights and growth strategies
+- Professional, emoji-free business language
+
+### 4. Data Storage
+- SQLite database for analysis history
+- User metrics tracking
+- Export capabilities (CSV, Excel)
+
+## 🎯 Use Cases
+
+- **Startup Founders**: Analyze pitch decks and business plans
+- **Investors**: Evaluate startup opportunities and growth potential
+- **Business Analysts**: Extract insights from market research
+- **Product Managers**: Analyze customer feedback and surveys
+- **Consultants**: Generate strategic recommendations
+
+## 🛠️ Technology Stack
+
+- **Backend**: FastAPI, PyMuPDF, Google Gemini AI
+- **Frontend**: Streamlit, Pandas, Requests
+- **Database**: SQLite
+- **AI/ML**: RAG (Retrieval-Augmented Generation), Text Embeddings
+- **Deployment**: Render, Streamlit Cloud
+
+## 📊 Sample Output
+
+The AI generates comprehensive analysis including:
+- Executive Summary
+- Value Proposition & Competitive Advantage
+- Market Opportunity Analysis
+- Business Model & Revenue Projections
+- Competitive Landscape
+- Financial Highlights
+- Team & Execution Capability
+- Investment & Funding Strategy
+- Risk Assessment
+- Final Growth Strategy
+
+## 🔒 Security
+
+- API keys stored in environment variables
+- No sensitive data committed to Git
+- CORS middleware for secure cross-origin requests
+- Input validation and sanitization
+
+## 🚨 Troubleshooting
+
+### Common Issues
+1. **"API Rate Limit"**: Check Google Gemini API quota
+2. **"Module not found"**: Install dependencies with pip
+3. **"Database error"**: Ensure SQLite file permissions
+4. **"Deployment failed"**: Check environment variables
+
+### Debug Mode
 ```bash
-# Check status
-git status
-
-# Add changes
-git add .
-
-# Commit
-git commit -m "Your commit message"
-
-# Push to GitHub
-git push origin main
+# Run with debug logging
+uvicorn main:app --reload --log-level debug
 ```
 
-## API Endpoints
-
-- `GET /` - API information
-- `POST /upload-pdf/` - Upload and analyze PDF
-- `GET /docs` - API documentation
-
-## Tech Stack
-
-- **Backend**: FastAPI, Python, Google Gemini AI
-- **Frontend**: React, Axios, CSS3
-- **Deployment**: Render (backend), Vercel/Netlify (frontend)
-- **Storage**: Temporary file storage
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create feature branch
-3. Make changes
-4. Test locally
-5. Submit pull request
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Google Gemini AI for powerful language model capabilities
+- FastAPI for high-performance web framework
+- Streamlit for rapid frontend development
+- PyMuPDF for reliable PDF processing
+
+## 📞 Support
+
+For issues and questions:
+- Check the troubleshooting section
+- Review deployment logs
+- Open a GitHub issue
+
+---
+
+**Built with ❤️ for startup founders and business analysts**
