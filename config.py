@@ -5,8 +5,12 @@ from urllib.parse import quote_plus
 load_dotenv()
 
 # Supabase Database Configuration
-password = quote_plus('Sameh@123')
-DATABASE_URL = os.getenv("DATABASE_URL", f"postgresql://postgres:{password}@db.jxggbdboltmdzcrbyyqw.supabase.co:5432/postgres")
+# Only use the default if DATABASE_URL is not set in environment
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    # Fallback to default only if no environment variable is set
+    password = quote_plus('Sameh@123')
+    DATABASE_URL = f"postgresql://postgres:{password}@db.jxggbdboltmdzcrbyyqw.supabase.co:5432/postgres"
 
 # Google AI Configuration
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
