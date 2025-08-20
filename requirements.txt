@@ -1,8 +1,8 @@
-fastapi
-python-multipart
-PyMuPDF
-google-generativeai
-python-dotenv
-uvicorn
-streamlit
-requests
+fastapi==0.104.1
+python-multipart==0.0.6
+PyMuPDF==1.23.8
+google-generativeai==0.3.2
+python-dotenv==1.0.0
+uvicorn[standard]==0.24.0
+requests==2.31.0
+psycopg2-binary==2.9.9

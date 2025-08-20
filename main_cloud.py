@@ -12,13 +12,13 @@ import json
 
 app = FastAPI(
     title="Startup Document Analyzer",
-    description="Automatic startup document analysis"
+    description="Automatic startup document analysis with cloud database"
 )
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://localhost:3000"],  # React dev server
+    allow_origins=["http://localhost:3000", "https://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,14 +34,12 @@ if not api_key:
 genai.configure(api_key=api_key)
 
 # Database configuration
-from config import DATABASE_URL
-
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost/dbname")
 
 # Create uploads directory
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# Database setup
 def get_db_connection():
     """Get database connection"""
     return psycopg2.connect(DATABASE_URL)
@@ -54,11 +52,11 @@ def init_db():
     # Create analysis history table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS analysis_history (
-            id BIGSERIAL PRIMARY KEY,
+            id SERIAL PRIMARY KEY,
             filename TEXT NOT NULL,
             document_type TEXT NOT NULL,
             analysis_data TEXT NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             user_id TEXT DEFAULT 'anonymous'
         )
     ''')
@@ -66,18 +64,18 @@ def init_db():
     # Create user metrics table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_metrics (
-            id BIGSERIAL PRIMARY KEY,
-            document_type TEXT NOT NULL UNIQUE,
+            id SERIAL PRIMARY KEY,
+            document_type TEXT NOT NULL,
             analysis_count INTEGER DEFAULT 1,
-            last_analyzed TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     
     conn.commit()
     conn.close()
 
-# Initialize database (only when needed)
-# init_db()  # Commented out to avoid startup connection issues
+# Initialize database
+init_db()
 
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extract text from PDF file"""
@@ -320,21 +318,20 @@ async def upload_pdf(
         cursor.execute('''
             INSERT INTO analysis_history (filename, document_type, analysis_data)
             VALUES (%s, %s, %s)
+            RETURNING id
         ''', (file.filename, document_type, json.dumps(analysis["analysis"])))
+        
+        analysis_id = cursor.fetchone()[0]
         
         # Update metrics
         cursor.execute('''
             INSERT INTO user_metrics (document_type, analysis_count, last_analyzed)
-            VALUES (%s, 1, NOW())
+            VALUES (%s, 1, CURRENT_TIMESTAMP)
             ON CONFLICT (document_type) 
             DO UPDATE SET 
                 analysis_count = user_metrics.analysis_count + 1,
-                last_analyzed = NOW()
+                last_analyzed = CURRENT_TIMESTAMP
         ''', (document_type,))
-        
-        # Get the inserted ID
-        cursor.execute("SELECT LASTVAL()")
-        analysis_id = cursor.fetchone()[0]
         
         conn.commit()
         conn.close()
@@ -352,34 +349,13 @@ async def upload_pdf(
 async def root():
     return {
         "name": "Startup Document Analyzer",
-        "description": "AI-powered analysis with quantified insights",
+        "description": "AI-powered analysis with cloud database",
         "endpoints": {
             "/upload-pdf/": "Upload and analyze startup documents",
             "/analytics/": "Get usage analytics",
-            "/history/": "Get analysis history",
-            "/health": "Health check for deployment monitoring"
+            "/history/": "Get analysis history"
         }
     }
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint for deployment monitoring"""
-    try:
-        # Test database connection
-        conn = get_db_connection()
-        conn.close()
-        return {
-            "status": "healthy",
-            "database": "connected",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "unhealthy",
-            "database": "disconnected",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
 
 @app.get("/analytics/")
 async def get_analytics():
@@ -402,7 +378,7 @@ async def get_analytics():
     # Get recent activity
     cursor.execute('''
         SELECT COUNT(*) FROM analysis_history 
-        WHERE created_at >= NOW() - INTERVAL '7 days'
+        WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
     ''')
     recent_analyses = cursor.fetchone()[0]
     
@@ -439,7 +415,7 @@ async def get_history(limit: int = 10):
                 "id": row[3],
                 "filename": row[0],
                 "document_type": row[1],
-                "created_at": row[2].isoformat() if row[2] else None
+                "created_at": row[2]
             }
             for row in history
         ]
