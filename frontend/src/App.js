@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 
 // Use environment variable or fallback to production URL
-const API_URL = process.env.REACT_APP_API_URL || 'https://startup-analyzer-api.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'https://revue-ai-6.onrender.com';
 console.log('Backend URL:', API_URL); // Debug connection
 
 function App() {
