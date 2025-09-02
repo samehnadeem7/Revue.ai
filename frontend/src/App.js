@@ -2,9 +2,9 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
 
-// Use environment variable or fallback to production URL
-const API_URL = process.env.REACT_APP_API_URL || 'https://revue-ai-6.onrender.com';
-console.log('Backend URL:', API_URL); // Debug connection
+// Direct connection to Render backend
+const API_URL = 'https://revue-ai-6.onrender.com';
+console.log('Connecting to backend:', API_URL);
 
 function App() {
   const [file, setFile] = useState(null);
@@ -68,15 +68,10 @@ function App() {
       formData.append('file', file);
 
       console.log('Sending request to:', `${API_URL}/upload-pdf/`);
-      console.log('Attempting to connect to:', API_URL);
       const response = await axios.post(`${API_URL}/upload-pdf/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json',
-          'Origin': window.location.origin,
-        },
-        withCredentials: false,
-        timeout: 30000, // 30 second timeout
+        }
       });
 
       const newAnalysis = {
