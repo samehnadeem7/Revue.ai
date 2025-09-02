@@ -87,7 +87,9 @@ function App() {
       setAnalysis(response.data.analysis);
       setAnalysisHistory(prev => [newAnalysis, ...prev.slice(0, 4)]);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to analyze document. Please try again.');
+      const errorMessage = err.response?.data?.detail || err.message;
+      console.error('Analysis error:', err);
+      setError(`Error: ${errorMessage}. Status: ${err.response?.status || 'Network Error'}`);
     } finally {
       setLoading(false);
     }
