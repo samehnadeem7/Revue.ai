@@ -95,15 +95,50 @@ function App() {
 
   const formatAnalysis = (text) => {
     return text.split('\n').map((line, index) => {
-      if (line.trim().match(/^\d+\./)) {
-        return <h3 key={index} className="section-header">{line}</h3>;
+      const trimmedLine = line.trim();
+      
+      // Handle headers with ##
+      if (trimmedLine.startsWith('## ')) {
+        return <h2 key={index} className="section-header">{trimmedLine.replace('## ', '')}</h2>;
       }
-      if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
-        return <li key={index} className="bullet-point">{line.replace(/^[•-]\s*/, '')}</li>;
+      
+      // Handle headers with ###
+      if (trimmedLine.startsWith('### ')) {
+        return <h3 key={index} className="section-header">{trimmedLine.replace('### ', '')}</h3>;
       }
-      if (line.trim()) {
-        return <p key={index} className="analysis-text">{line}</p>;
+      
+      // Handle numbered lists
+      if (trimmedLine.match(/^\d+\./)) {
+        return <h3 key={index} className="section-header">{trimmedLine}</h3>;
       }
+      
+      // Handle bullet points with *
+      if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        return <h4 key={index} className="subsection-header">{trimmedLine.replace(/\*\*/g, '')}</h4>;
+      }
+      
+      // Handle bullet points with • or -
+      if (trimmedLine.startsWith('•') || trimmedLine.startsWith('-')) {
+        return <li key={index} className="bullet-point">{trimmedLine.replace(/^[•-]\s*/, '')}</li>;
+      }
+      
+      // Handle bold text with **text**
+      if (trimmedLine.includes('**')) {
+        const parts = trimmedLine.split('**');
+        return (
+          <p key={index} className="analysis-text">
+            {parts.map((part, i) => 
+              i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+            )}
+          </p>
+        );
+      }
+      
+      // Handle regular paragraphs
+      if (trimmedLine) {
+        return <p key={index} className="analysis-text">{trimmedLine}</p>;
+      }
+      
       return <br key={index} />;
     });
   };
