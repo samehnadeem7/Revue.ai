@@ -68,12 +68,15 @@ function App() {
       formData.append('file', file);
 
       console.log('Sending request to:', `${API_URL}/upload-pdf/`);
+      console.log('Attempting to connect to:', API_URL);
       const response = await axios.post(`${API_URL}/upload-pdf/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Accept': 'application/json',
+          'Origin': window.location.origin,
         },
         withCredentials: false,
+        timeout: 30000, // 30 second timeout
       });
 
       const newAnalysis = {
