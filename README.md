@@ -58,17 +58,23 @@ Frontend (Streamlit) ←→ Backend (FastAPI) ←→ Google Gemini API
 
 4. **Run the application**
    ```bash
-   # Terminal 1: Start FastAPI backend
-   python main.py
+   # Option 1: Use the launcher (Windows)
+   launch.bat
    
-   # Terminal 2: Start Streamlit frontend
-   streamlit run frontend.py
+   # Option 2: Manual start
+   # Terminal 1: Start FastAPI backend
+   .venv\Scripts\activate
+   python -m uvicorn main:app --host 127.0.0.1 --port 8000
+   
+   # Terminal 2: Start React frontend
+   cd frontend
+   npm start
    ```
 
 5. **Access the application**
-   - Backend: http://localhost:8000
-   - Frontend: http://localhost:8501
-   - API Docs: http://localhost:8000/docs
+   - Backend: http://127.0.0.1:8000
+   - Frontend: http://localhost:3000
+   - API Docs: http://127.0.0.1:8000/docs
 
 ## ☁️ Cloud Deployment
 

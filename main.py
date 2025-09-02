@@ -22,7 +22,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://localhost:3000"],  # React dev server
+    allow_origins=["*"],  # Allow all origins in development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,9 +33,10 @@ load_dotenv()
 
 # Configure Google Gemini API
 api_key = os.getenv("GOOGLE_API_KEY")
-if not api_key:
-    raise ValueError("GOOGLE_API_KEY not found in environment variables")
-google.generativeai.configure(api_key=api_key)
+if api_key:
+    google.generativeai.configure(api_key=api_key)
+else:
+    print("⚠️  Warning: GOOGLE_API_KEY not found. Application will run in fallback mode with template-based analysis.")
 
 # Create uploads directory
 UPLOAD_DIR = "uploads"
