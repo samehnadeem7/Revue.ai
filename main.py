@@ -173,25 +173,40 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
         )
     
     analysis_prompts = {
-        "Google Forms Feedback": """Analyze this customer feedback and provide comprehensive, actionable startup insights with detailed analysis:
+        "Google Forms Feedback": """Analyze this customer feedback and provide strategic business insights with clear pros, cons, and action plans:
 
-        1. CUSTOMER INSIGHTS OVERVIEW (Detailed analysis with specific metrics)
-           - Total response volume and completion rates with numerical breakdown
-           - Key demographic or segment insights with specific examples
-           - Overall sentiment score (1-10 scale) with trend analysis
-           - Response quality indicators and data reliability assessment
-           - Customer engagement patterns and response timing analysis
+        ## 🎯 EXECUTIVE SUMMARY
+        Provide a 3-sentence summary of the key findings and strategic implications.
 
-        2. FEEDBACK PATTERNS & TRENDS (Comprehensive analysis with examples)
-           - Most common positive feedback themes with specific quotes and frequency
-           - Most critical pain points identified with impact assessment and priority ranking
-           - Customer satisfaction patterns across different segments with detailed breakdown
-           - Response time patterns and engagement metrics with actionable insights
-           - Seasonal or time-based trends in feedback with correlation analysis
-           - Customer behavior patterns and decision-making factors
+        ## ✅ STRENGTHS & OPPORTUNITIES (PROS)
+        - List 5-7 key strengths identified from feedback
+        - Include specific quotes and metrics where possible
+        - Highlight competitive advantages and market opportunities
 
-        3. PRODUCT/MARKET FIT ANALYSIS (Quantified insights with examples)
-           - How well the product meets customer needs with specific examples and metrics
+        ## ❌ WEAKNESSES & THREATS (CONS)  
+        - List 5-7 critical issues and pain points
+        - Include specific customer complaints and concerns
+        - Identify potential business risks and threats
+
+        ## 🚀 IMMEDIATE ACTION PLAN (Next 30 Days)
+        - 5 specific, actionable steps to address critical issues
+        - Include timelines, owners, and success metrics
+        - Focus on quick wins and high-impact changes
+
+        ## 📈 STRATEGIC ROADMAP (3-6 Months)
+        - 5 strategic initiatives for sustainable growth
+        - Include resource requirements and expected outcomes
+        - Focus on product improvements and market expansion
+
+        ## 💡 COMPETITIVE STRATEGY
+        - How to leverage strengths against competitors
+        - Market positioning recommendations
+        - Differentiation opportunities
+
+        ## 📊 SUCCESS METRICS & KPIs
+        - Key metrics to track progress
+        - Target numbers and timelines
+        - Measurement framework
            - Market gaps and underserved customer segments with size estimates
            - Customer segment preferences and priorities with detailed breakdown
            - Feature adoption and usage patterns with success metrics
@@ -241,22 +256,40 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
 
         CRITICAL REQUIREMENTS: Provide comprehensive, detailed analysis for each section. Include specific examples, numbers, actionable insights, and implementation details. Address edge cases, potential challenges, and alternative scenarios. Focus on insights that drive measurable growth and customer satisfaction improvements. Each section should contain 200-400 words of detailed analysis.""",
         
-        "Startup Document": """Analyze this startup document and provide comprehensive, quantified insights with strategic depth:
+        "Startup Document": """Analyze this startup document and provide strategic business insights with clear pros, cons, and action plans:
 
-        1. EXECUTIVE SUMMARY (4-5 sentences with key metrics and positioning)
-           - Core value proposition in one sentence
-           - Market opportunity size and growth potential
-           - Competitive positioning and differentiation
-           - Key success factors and risk factors
-           - Investment potential and funding readiness
+        ## 🎯 EXECUTIVE SUMMARY
+        Provide a 3-sentence summary of the startup's potential and key strategic insights.
 
-        2. VALUE PROPOSITION & COMPETITIVE ADVANTAGE (Detailed analysis)
-           - What makes this startup unique? (specific features and benefits)
-           - How will it stand out from competitors? (detailed comparison)
-           - Quantified benefits (e.g., "30% cost reduction", "5x faster", "2x ROI")
-           - Intellectual property and defensibility factors
-           - Scalability and replication potential
-           - Customer acquisition and retention advantages
+        ## ✅ STRENGTHS & OPPORTUNITIES (PROS)
+        - List 5-7 key strengths and competitive advantages
+        - Include specific metrics and market opportunities
+        - Highlight unique value propositions and defensibility
+
+        ## ❌ WEAKNESSES & THREATS (CONS)
+        - List 5-7 critical weaknesses and market risks
+        - Include specific challenges and competitive threats
+        - Identify potential business and execution risks
+
+        ## 🚀 IMMEDIATE ACTION PLAN (Next 30 Days)
+        - 5 specific, actionable steps to strengthen the startup
+        - Include timelines, priorities, and success metrics
+        - Focus on validation and quick wins
+
+        ## 📈 STRATEGIC ROADMAP (3-6 Months)
+        - 5 strategic initiatives for growth and scaling
+        - Include resource requirements and expected outcomes
+        - Focus on market penetration and product development
+
+        ## 💡 COMPETITIVE STRATEGY
+        - How to compete effectively in the market
+        - Positioning recommendations and differentiation tactics
+        - Partnership and collaboration opportunities
+
+        ## 📊 SUCCESS METRICS & KPIs
+        - Key metrics to track startup progress
+        - Target numbers and milestones
+        - Investment and funding readiness indicators
 
         3. MARKET OPPORTUNITY (Comprehensive market analysis)
            - Market size breakdown: TAM, SAM, SOM with specific numbers
