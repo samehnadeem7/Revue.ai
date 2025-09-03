@@ -33,10 +33,15 @@ load_dotenv()
 
 # Configure Google Gemini API
 api_key = os.getenv("GOOGLE_API_KEY")
-if api_key:
+print(f"🔍 Debug: API key found: {'YES' if api_key else 'NO'}")
+print(f"🔍 Debug: API key length: {len(api_key) if api_key else 0}")
+print(f"🔍 Debug: API key starts with: {api_key[:10] if api_key else 'N/A'}")
+
+if api_key and api_key != "your-actual-google-api-key-here":
     google.generativeai.configure(api_key=api_key)
+    print("✅ Google Gemini API configured successfully!")
 else:
-    print("⚠️  Warning: GOOGLE_API_KEY not found. Application will run in fallback mode with template-based analysis.")
+    print("⚠️  Warning: GOOGLE_API_KEY not found or invalid. Application will run in fallback mode with template-based analysis.")
 
 # Create uploads directory
 UPLOAD_DIR = "uploads"
