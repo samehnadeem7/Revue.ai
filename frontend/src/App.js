@@ -32,11 +32,14 @@ function App() {
     
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const selectedFile = e.dataTransfer.files[0];
-      if (selectedFile.type === 'application/pdf') {
+      const name = (selectedFile.name || '').toLowerCase();
+      const isPdf = selectedFile.type === 'application/pdf' || name.endsWith('.pdf');
+      const isCsv = selectedFile.type === 'text/csv' || name.endsWith('.csv') || selectedFile.type === 'application/vnd.ms-excel';
+      if (isPdf || isCsv) {
         setFile(selectedFile);
         setError('');
       } else {
-        setError('Please select a PDF file');
+        setError('Please select a PDF or CSV file');
         setFile(null);
       }
     }
@@ -44,18 +47,22 @@ function App() {
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
-    if (selectedFile && selectedFile.type === 'application/pdf') {
+    if (!selectedFile) return;
+    const name = (selectedFile.name || '').toLowerCase();
+    const isPdf = selectedFile.type === 'application/pdf' || name.endsWith('.pdf');
+    const isCsv = selectedFile.type === 'text/csv' || name.endsWith('.csv') || selectedFile.type === 'application/vnd.ms-excel';
+    if (isPdf || isCsv) {
       setFile(selectedFile);
       setError('');
     } else {
-      setError('Please select a PDF file');
+      setError('Please select a PDF or CSV file');
       setFile(null);
     }
   };
 
   const handleAnalyze = async () => {
     if (!file) {
-      setError('Please select a PDF file first');
+      setError('Please select a PDF or CSV file first');
       return;
     }
 
@@ -67,8 +74,10 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
 
-      console.log('Sending request to:', `${API_URL}/upload-pdf/`);
-      const response = await axios.post(`${API_URL}/upload-pdf/`, formData, {
+      const isCsv = (file.name || '').toLowerCase().endsWith('.csv');
+      const endpoint = isCsv ? `${API_URL}/upload-csv/` : `${API_URL}/upload-pdf/`;
+      console.log('Sending request to:', endpoint);
+      const response = await axios.post(endpoint, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         }
@@ -221,7 +230,7 @@ function App() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.csv"
                 onChange={handleFileChange}
                 className="file-input"
                 style={{ display: 'none' }}
@@ -229,7 +238,7 @@ function App() {
               
               <div className="upload-content">
                 <div className="upload-icon">📄</div>
-                <h3>Drop your PDF here</h3>
+                <h3>Drop your PDF or CSV here</h3>
                 <p>or</p>
                 <button 
                   className="browse-button"
@@ -237,7 +246,7 @@ function App() {
                 >
                   Browse Files
                 </button>
-                <p className="file-types">Supports: PDF documents</p>
+                <p className="file-types">Supports: PDF, CSV</p>
               </div>
 
               {file && (
