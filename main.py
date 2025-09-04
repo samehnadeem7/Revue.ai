@@ -13,6 +13,8 @@ from datetime import datetime
 import json
 import requests
 from urllib.parse import urlparse, parse_qs
+import csv
+import io
 
 app = FastAPI(
     title="Startup Document Analyzer",
@@ -1338,6 +1340,141 @@ async def upload_pdf(
             "analysis": analysis["analysis"],
             "analysis_id": analysis_id
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+def _read_csv_bytes_to_text(content: bytes) -> str:
+    """Decode CSV bytes with best-effort encodings into a unified text string."""
+    for encoding in ["utf-8", "utf-8-sig", "latin-1", "cp1252"]:
+        try:
+            return content.decode(encoding)
+        except Exception:
+            continue
+    # Fallback binary-safe decode
+    return content.decode(errors="ignore")
+
+def _csv_to_feedback_text(csv_text: str, max_rows: int = 5000) -> str:
+    """Parse CSV into a single feedback text blob using likely text columns.
+
+    Heuristics:
+    - Prefer columns with names indicating free-text feedback
+    - Otherwise, concatenate all string-like fields per row
+    """
+    stream = io.StringIO(csv_text)
+    try:
+        reader = csv.DictReader(stream)
+        rows = []
+        row_count = 0
+        for row in reader:
+            rows.append(row)
+            row_count += 1
+            if row_count >= max_rows:
+                break
+        # If no header or empty
+        if not rows:
+            # Try simple reader (no header)
+            stream.seek(0)
+            reader2 = csv.reader(stream)
+            lines: list[str] = []
+            for i, cols in enumerate(reader2):
+                if i >= max_rows:
+                    break
+                # Join all cols as one line
+                try:
+                    line = " ".join(str(c) for c in cols if c and str(c).strip())
+                except Exception:
+                    line = " ".join([str(c) for c in cols])
+                if line.strip():
+                    lines.append(line.strip())
+            return "\n".join(lines)
+
+        # Detect likely text columns
+        fieldnames = [fn or "" for fn in (rows[0].keys() if rows else [])]
+        candidate_markers = [
+            "feedback", "review", "comment", "text", "message", "content", "body",
+            "response", "opinion", "description"
+        ]
+        candidate_cols = [
+            f for f in fieldnames
+            if any(marker in f.lower() for marker in candidate_markers)
+        ]
+        # If nothing matched, fall back to all columns
+        if not candidate_cols:
+            candidate_cols = fieldnames
+
+        lines: list[str] = []
+        for row in rows:
+            parts: list[str] = []
+            for col in candidate_cols:
+                try:
+                    val = row.get(col, "")
+                except Exception:
+                    val = ""
+                if val is None:
+                    continue
+                sval = str(val).strip()
+                if sval:
+                    parts.append(sval)
+            if parts:
+                lines.append(" ".join(parts))
+        return "\n".join(lines)
+    finally:
+        stream.close()
+
+@app.post("/upload-csv/")
+async def upload_csv(
+    file: UploadFile = File(...)
+):
+    """Upload a CSV of feedback rows and analyze at scale."""
+    if not (file.filename.lower().endswith('.csv')):
+        raise HTTPException(status_code=400, detail="Only CSV files allowed")
+
+    try:
+        # Read entire file into memory (bounded by platform limits)
+        raw_bytes = await file.read()
+        csv_text = _read_csv_bytes_to_text(raw_bytes)
+        if not csv_text or len(csv_text.strip()) == 0:
+            raise HTTPException(status_code=400, detail="CSV appears to be empty")
+
+        feedback_text = _csv_to_feedback_text(csv_text)
+        if not feedback_text or len(feedback_text.strip()) == 0:
+            raise HTTPException(status_code=400, detail="No textual feedback found in CSV")
+
+        # Analyze using existing pipeline (auto-detects bulk feedback type)
+        analysis = analyze_startup_document(feedback_text)
+
+        detected_type = "Auto-Detected"
+
+        # Store analysis in database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO analysis_history (filename, document_type, analysis_data)
+            VALUES (?, ?, ?)
+        ''', (file.filename, detected_type, json.dumps(analysis["analysis"])) )
+
+        cursor.execute('''
+            INSERT INTO user_metrics (document_type, analysis_count, last_analyzed)
+            VALUES (?, 1, CURRENT_TIMESTAMP)
+            ON CONFLICT (document_type)
+            DO UPDATE SET
+                analysis_count = user_metrics.analysis_count + 1,
+                last_analyzed = CURRENT_TIMESTAMP
+        ''', (detected_type,))
+
+        analysis_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return {
+            "filename": file.filename,
+            "document_type": detected_type,
+            "analysis": analysis["analysis"],
+            "analysis_id": analysis_id
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
