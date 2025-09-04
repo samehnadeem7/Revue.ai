@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 
 // Direct connection to Render backend
-const API_URL = 'https://revue-ai-7.onrender.com';
+const API_URL = 'https://revue-ai-8.onrender.com';
 console.log('Connecting to backend:', API_URL);
 
 function App() {
