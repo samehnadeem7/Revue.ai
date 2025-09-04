@@ -1009,12 +1009,30 @@ This document has been analyzed for startup and business relevance.
 
         def embed_text(content: str) -> np.ndarray:
             try:
-                model = google.generativeai.embed_content(
-                    model="models/embedding-001",
+                # Use latest text embedding model and handle response shapes
+                result = google.generativeai.embed_content(
+                    model="models/text-embedding-004",
                     content=content
                 )
-                embedding = model.embedding
-                return np.array(embedding, dtype=float)
+
+                embedding_values = None
+                if isinstance(result, dict):
+                    emb = result.get("embedding", result)
+                    if isinstance(emb, dict) and "values" in emb:
+                        embedding_values = emb["values"]
+                    elif isinstance(emb, list):
+                        embedding_values = emb
+                else:
+                    maybe_emb = getattr(result, "embedding", None)
+                    if isinstance(maybe_emb, dict) and "values" in maybe_emb:
+                        embedding_values = maybe_emb["values"]
+                    else:
+                        embedding_values = maybe_emb
+
+                if not embedding_values:
+                    raise RuntimeError("Empty embedding returned from API")
+
+                return np.array(embedding_values, dtype=float)
             except Exception as e:
                 raise RuntimeError(f"Failed to get embedding: {str(e)}")
 
@@ -1066,11 +1084,11 @@ IMPORTANT: Write in a professional, business-focused tone. Use minimal emojis an
 
 {analysis_prompts.get(prompt_type, analysis_prompts["Startup Document"]) }
 """
-            model = google.generativeai.generate_content(
-                model="gemini-1.5-flash",
-                contents=business_analyst_prompt
+            gen_model = google.generativeai.GenerativeModel("gemini-1.5-flash")
+            response = gen_model.generate_content(
+                business_analyst_prompt
             )
-            return {"analysis": model.text}
+            return {"analysis": response.text}
 
         embeddings_matrix = np.vstack(chunk_embeddings)
 
@@ -1130,28 +1148,26 @@ Task:
 {analysis_prompts.get(prompt_type, list(analysis_prompts.values())[0]) }
 """
 
-        model = google.generativeai.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt
+        gen_model = google.generativeai.GenerativeModel("gemini-1.5-flash")
+        response = gen_model.generate_content(
+            prompt
         )
-        return {"analysis": model.text}
+        return {"analysis": response.text}
         
     except Exception as e:
-        # If AI analysis fails (rate limit, API error, etc.), use template fallback
+        # Only template-fallback for rate/quota; otherwise bubble up
         error_msg = str(e)
         print(f"❌ AI Analysis failed: {error_msg}")
         print(f"❌ Error type: {type(e).__name__}")
-        
-        if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
-            # API rate limit hit - use template analysis
-            print("⚠️ Using template due to rate limit")
+
+        lower_msg = error_msg.lower()
+        if "429" in lower_msg or "quota" in lower_msg or "rate" in lower_msg:
+            print("⚠️ Using template due to rate limit/quota")
             fallback_analysis = get_fallback_analysis(detected_type, text)
             return {"analysis": fallback_analysis, "api_status": "rate_limited", "fallback": True}
-        else:
-            # Other API error - still use template but indicate the issue
-            print(f"⚠️ Using template due to API error: {error_msg}")
-            fallback_analysis = get_fallback_analysis(detected_type, text)
-            return {"analysis": fallback_analysis, "api_status": "error", "fallback": True, "error": error_msg}
+
+        # Propagate error so client surfaces the real issue
+        raise
 
 @app.post("/upload-pdf/")
 async def upload_pdf(
