@@ -42,11 +42,13 @@ print(f"🔍 Debug: API key found: {'YES' if api_key else 'NO'}")
 print(f"🔍 Debug: API key length: {len(api_key) if api_key else 0}")
 print(f"🔍 Debug: API key starts with: {api_key[:10] if api_key else 'N/A'}")
 
-if api_key and api_key != "your-actual-google-api-key-here":
+if api_key and api_key.strip() and api_key != "your-actual-google-api-key-here" and len(api_key) > 20:
     google.generativeai.configure(api_key=api_key)
     print("✅ Google Gemini API configured successfully!")
+    print(f"✅ API key configured with length: {len(api_key)}")
 else:
     print("⚠️  Warning: GOOGLE_API_KEY not found or invalid. Application will run in fallback mode with template-based analysis.")
+    print(f"⚠️  API key value: '{api_key}' (length: {len(api_key) if api_key else 0})")
 
 # Create uploads directory
 UPLOAD_DIR = "uploads"
@@ -1338,7 +1340,7 @@ async def health_check():
         
         # Check API key status
         api_key = os.getenv("GOOGLE_API_KEY")
-        api_status = "configured" if api_key and api_key != "your-actual-google-api-key-here" else "missing"
+        api_status = "configured" if api_key and api_key.strip() and api_key != "your-actual-google-api-key-here" and len(api_key) > 20 else "missing"
         
         return {
             "status": "healthy",
