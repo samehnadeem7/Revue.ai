@@ -962,6 +962,10 @@ This document has been analyzed for startup and business relevance.
             """
 
     # Try AI analysis first, fallback to template if API fails
+    print(f"🔍 Starting analysis for document type: {detected_type}")
+    print(f"🔍 API key available: {'YES' if api_key else 'NO'}")
+    print(f"🔍 API key length: {len(api_key) if api_key else 0}")
+    
     try:
         # Enhanced RAG implementation with better error handling
         def chunk_text(input_text: str, max_chars: int = 1500) -> List[str]:
@@ -1120,12 +1124,17 @@ Task:
     except Exception as e:
         # If AI analysis fails (rate limit, API error, etc.), use template fallback
         error_msg = str(e)
+        print(f"❌ AI Analysis failed: {error_msg}")
+        print(f"❌ Error type: {type(e).__name__}")
+        
         if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
             # API rate limit hit - use template analysis
+            print("⚠️ Using template due to rate limit")
             fallback_analysis = get_fallback_analysis(detected_type, text)
             return {"analysis": fallback_analysis, "api_status": "rate_limited", "fallback": True}
         else:
             # Other API error - still use template but indicate the issue
+            print(f"⚠️ Using template due to API error: {error_msg}")
             fallback_analysis = get_fallback_analysis(detected_type, text)
             return {"analysis": fallback_analysis, "api_status": "error", "fallback": True, "error": error_msg}
 
