@@ -111,6 +111,81 @@ def extract_text_from_pdf(pdf_path: str) -> str:
 def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> Dict:
     """Analyze document based on type and return structured insights"""
 
+    # ---------------------- Pre-analysis Rules (Guards) ----------------------
+    def sanitize_text(input_text: str) -> str:
+        return input_text.replace("\x00", " ").strip()
+
+    def split_sentences(input_text: str) -> List[str]:
+        # Simple sentence splitter on punctuation; filters empties
+        parts = re.split(r"(?<=[\.!?…])\s+", input_text)
+        return [p.strip() for p in parts if p and len(p.strip()) > 0]
+
+    def is_customer_feedback(input_text: str) -> bool:
+        lower = input_text.lower()
+        review_keywords = [
+            "feedback", "review", "reviews", "rating", "ratings", "stars", "experience",
+            "service", "support", "staff", "delivery", "quality", "recommend", "refund",
+            "complaint", "satisfied", "unsatisfied", "bad", "good", "excellent", "poor"
+        ]
+        disqualifiers = [
+            "invoice", "contract", "agreement", "policy", "privacy policy", "terms",
+            "cv", "resume", "curriculum vitae", "nda", "purchase order", "scope of work"
+        ]
+        has_reviews = sum(1 for k in review_keywords if k in lower) >= 3
+        has_disqualifier = any(k in lower for k in disqualifiers)
+        return has_reviews and not has_disqualifier
+
+    def extract_spam_offensive_lines(input_text: str) -> Tuple[str, List[str]]:
+        lines = [ln for ln in input_text.splitlines()]
+        flagged: List[str] = []
+        cleaned_lines: List[str] = []
+        spam_patterns = [r"http[s]?://", r"buy now", r"free", r"visit", r"click here", r"promo", r"offer"]
+        offensive_words = [
+            "idiot", "stupid", "dumb", "trash", "garbage", "fool", "hate", "racist", "sexist",
+            "moron", "shitty", "wtf", "f*", "fucking"
+        ]
+        for ln in lines:
+            l = ln.lower()
+            is_spam = any(re.search(p, l) for p in spam_patterns)
+            is_off = any(w in l for w in offensive_words)
+            if is_spam or is_off:
+                flagged.append(ln.strip())
+            else:
+                cleaned_lines.append(ln)
+        return "\n".join(cleaned_lines), flagged
+
+    def maybe_translate_to_english(input_text: str) -> str:
+        # Heuristic: if non-ASCII alphabet ratio is high, assume non-English
+        letters = re.findall(r"[A-Za-z]", input_text)
+        ascii_ratio = (len(letters) / max(1, len(re.findall(r"\w", input_text))))
+        if ascii_ratio >= 0.6:
+            return input_text
+        try:
+            model = google.generativeai.GenerativeModel("gemini-1.5-flash")
+            resp = model.generate_content(
+                "Translate the following text to English. Output only the translated text without commentary:\n\n" + input_text
+            )
+            return resp.text or input_text
+        except Exception:
+            return input_text
+
+    # Sanitize and apply guards
+    text = sanitize_text(text)
+    # Extract and exclude spam/offensive before further checks
+    filtered_text, flagged_items = extract_spam_offensive_lines(text)
+    sentences = split_sentences(filtered_text)
+
+    # Rule 2: Not enough sentences
+    if len(sentences) < 3:
+        return {"analysis": "Not enough feedback to analyze. Please provide more responses."}
+
+    # Rule 1: Ensure content is customer feedback
+    if not is_customer_feedback(filtered_text):
+        return {"analysis": "This content is not suitable for customer feedback analysis. Please upload customer reviews."}
+
+    # Rule 4: Translate to English if needed
+    filtered_text = maybe_translate_to_english(filtered_text)
+
     # Auto-detect document type based on content
     def detect_document_type(text: str) -> str:
         text_lower = text.lower()
@@ -119,7 +194,7 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
         google_forms_indicators = ["google forms", "form responses", "google form", "forms.gle", "docs.google.com/forms"]
         if any(keyword in text_lower for keyword in google_forms_indicators):
             return "Google Forms Feedback"
-
+        
         # General bulk feedback indicators (large-scale surveys/reviews)
         feedback_indicators = [
             "feedback", "responses", "response count", "survey", "reviews", "ratings",
@@ -682,69 +757,25 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
 
         Provide SPECIFIC NUMBERS, PERCENTAGES, and TIMELINES. Focus on FINANCIAL VIABILITY, INVESTMENT POTENTIAL, and SUSTAINABLE GROWTH. Include edge cases, financial risks, and alternative scenarios that could impact financial performance and investment decisions.""",
         
-        "Business Analysis": """Analyze this document and provide comprehensive, detailed business insights with strategic depth:
+        "Business Analysis": """Analyze this document and provide:
+        1. Overall Summary (2-3 sentences)
+        2. Company Vision and Overview (identify the type of business from the document, then propose a clear vision statement and a short overview).
+        3. Industry and Market Analysis (analyze the industry the business belongs to, its competitive positioning, market opportunities, and risks).
+        4. Feedback Analysis
+           4.1 Positive Points (3-4 most common)
+           4.2 Negative Points (3-4 most common)
+           4.3 Non-business Related (staff, cleanliness, behaviour, etc.)
+           4.4 Spam Reviews Check – identify if any reviews appear irrelevant or spam-like (summarize in 1–2 sentences).
+        5. Final Verdict (a thoughtful conclusion combining all the above insights with an intelligent recommendation or improvement direction).
 
-        1. OVERALL SUMMARY (Comprehensive business overview)
-           - Executive summary with key business metrics and positioning
-           - Core business model and value proposition identification
-           - Market position and competitive landscape overview
-           - Key success factors and risk factors assessment
-           - Business maturity and growth stage evaluation
+        Format in clear sections with bullet points where relevant.
 
-        2. COMPANY VISION AND OVERVIEW (Strategic positioning)
-           - Business type identification with industry classification
-           - Clear vision statement with strategic objectives
-           - Mission statement and core values identification
-           - Business model analysis and revenue streams
-           - Strategic positioning and market differentiation
-           - Growth trajectory and expansion plans
-
-        3. INDUSTRY AND MARKET ANALYSIS (Comprehensive market intelligence)
-           - Industry analysis with market size and growth trends
-           - Competitive positioning and market share analysis
-           - Market opportunities with size and timing assessment
-           - Risk factors with probability and impact analysis
-           - Regulatory environment and compliance requirements
-           - Market maturity and evolution stage assessment
-
-        4. FEEDBACK ANALYSIS (Customer and stakeholder insights)
-           4.1 POSITIVE POINTS (3-4 most common with specific examples)
-               - Customer satisfaction drivers and success factors
-               - Product/service strengths and competitive advantages
-               - Operational excellence indicators and best practices
-               - Brand perception and reputation strengths
-               - Customer loyalty and retention factors
-
-           4.2 NEGATIVE POINTS (3-4 most common with impact assessment)
-               - Customer pain points and dissatisfaction drivers
-               - Product/service weaknesses and improvement areas
-               - Operational challenges and inefficiencies
-               - Brand perception issues and reputation risks
-               - Customer churn and retention challenges
-
-           4.3 NON-BUSINESS RELATED FACTORS (Operational and environmental)
-               - Staff performance and customer service quality
-               - Cleanliness and facility maintenance standards
-               - Customer behavior and interaction patterns
-               - Environmental factors and location considerations
-               - Operational processes and efficiency factors
-
-           4.4 SPAM REVIEWS CHECK (Quality and authenticity assessment)
-               - Irrelevant or spam-like review identification
-               - Review authenticity and credibility assessment
-               - Data quality and reliability factors
-               - Review moderation and quality control needs
-               - Customer feedback validation and verification
-
-        5. FINAL VERDICT (Strategic conclusion and recommendations)
-           - Comprehensive conclusion combining all insights
-           - Strategic recommendations with implementation priority
-           - Improvement direction with specific action items
-           - Risk mitigation strategies and contingency plans
-           - Success metrics and KPIs for tracking progress
-           - Long-term strategic vision and growth roadmap
-
-        IMPORTANT: Provide detailed, comprehensive analysis for each section. Include specific examples, actionable insights, and strategic recommendations. Address edge cases, potential challenges, and alternative scenarios. Use clear sections with bullet points for clarity and actionable insights.""",
+        Rules to follow BEFORE analysis:
+        1) If input is not customer feedback (contracts, invoices, CVs, policies, random articles, or empty text), respond ONLY with: "This content is not suitable for customer feedback analysis. Please upload customer reviews." and stop.
+        2) If input has fewer than 3 sentences, respond ONLY with: "Not enough feedback to analyze. Please provide more responses." and stop.
+        3) If content contains offensive, spam, or irrelevant items, list them under a section titled "Spam/Offensive Content" and EXCLUDE them from main insights.
+        4) If input is not English, translate to English first, then continue.
+        5) If input is very large, summarize in batches before producing the final summary.""",
         
         "Unknown Document": """Analyze this document and provide comprehensive, startup-focused insights with strategic depth:
 
@@ -850,7 +881,7 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
 
 Note: This is a template outline. For AI-powered, quantified insights, ensure API availability.
 """
-
+        
         if doc_type == "Google Forms Feedback":
             return f"""
 # Google Forms Analysis Report
@@ -1465,7 +1496,7 @@ async def health_check():
             "database": "disconnected",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
-        }
+    }
 
 @app.get("/analytics/")
 async def get_analytics():
