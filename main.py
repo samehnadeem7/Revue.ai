@@ -115,24 +115,35 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
     def detect_document_type(text: str) -> str:
         text_lower = text.lower()
         
-        # Check for Google Forms indicators
-        if any(keyword in text_lower for keyword in ["google forms", "form responses", "survey", "questionnaire", "feedback form"]):
+        # Check for Google Forms indicators - More specific detection
+        google_forms_indicators = ["google forms", "form responses", "google form", "forms.gle", "docs.google.com/forms"]
+        if any(keyword in text_lower for keyword in google_forms_indicators):
             return "Google Forms Feedback"
         
-        # Check for startup indicators
-        startup_keywords = ["startup", "pitch", "business plan", "market", "revenue", "funding", "investor", "vc", "angel", "seed", "series a", "series b", "exit", "ipo", "acquisition"]
-        if any(keyword in text_lower for keyword in startup_keywords):
-            return "Startup Document"
-        
-        # Check for financial indicators
-        financial_keywords = ["financial", "revenue", "profit", "cost", "margin", "cash flow", "balance sheet", "income statement", "ebitda", "roi"]
+        # Check for financial indicators first (more specific)
+        financial_keywords = ["balance sheet", "income statement", "cash flow statement", "financial statements", "ebitda", "profit and loss", "p&l"]
         if any(keyword in text_lower for keyword in financial_keywords):
             return "Financial Document"
         
+        # Check for business plan indicators
+        business_plan_keywords = ["executive summary", "business plan", "company overview", "mission statement", "vision statement"]
+        if any(keyword in text_lower for keyword in business_plan_keywords):
+            return "Business Plan"
+        
         # Check for market research indicators
-        market_keywords = ["market research", "competitor", "industry", "trend", "analysis", "survey", "customer", "demographic"]
+        market_keywords = ["market research", "market analysis", "competitor analysis", "industry analysis", "market size", "target market"]
         if any(keyword in text_lower for keyword in market_keywords):
             return "Market Research"
+        
+        # Check for startup indicators (broader)
+        startup_keywords = ["startup", "pitch deck", "pitch", "funding", "investor", "vc", "angel", "seed", "series a", "series b", "exit", "ipo", "acquisition", "valuation"]
+        if any(keyword in text_lower for keyword in startup_keywords):
+            return "Startup Document"
+        
+        # Check for general business content
+        business_keywords = ["business", "company", "revenue", "profit", "cost", "margin", "strategy", "market", "customer", "product", "service"]
+        if any(keyword in text_lower for keyword in business_keywords):
+            return "Business Analysis"
         
         return "Unknown Document"
 
@@ -176,6 +187,8 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
 
     # Auto-detect document type
     detected_type = detect_document_type(text)
+    print(f"🔍 Detected document type: {detected_type}")
+    print(f"🔍 Document content preview: {text[:200]}...")
     
     # Validate content for startup analysis
     if not validate_startup_content(text):
