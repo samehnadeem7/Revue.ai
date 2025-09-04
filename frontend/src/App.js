@@ -85,9 +85,18 @@ function App() {
       setAnalysis(response.data.analysis);
       setAnalysisHistory(prev => [newAnalysis, ...prev.slice(0, 4)]);
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message;
-      console.error('Analysis error:', err);
-      setError(`Error: ${errorMessage}. Status: ${err.response?.status || 'Network Error'}`);
+      console.error('Full error object:', err);
+      console.error('Error response:', err.response);
+      console.error('Error message:', err.message);
+      
+      let errorMessage = 'Unknown error occurred';
+      if (err.response?.data?.detail) {
+        errorMessage = err.response.data.detail;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(`❌ Connection Error: ${errorMessage}. Status: ${err.response?.status || 'Network Error'}. Check console for details.`);
     } finally {
       setLoading(false);
     }
