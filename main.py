@@ -119,6 +119,15 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
         google_forms_indicators = ["google forms", "form responses", "google form", "forms.gle", "docs.google.com/forms"]
         if any(keyword in text_lower for keyword in google_forms_indicators):
             return "Google Forms Feedback"
+
+        # General bulk feedback indicators (large-scale surveys/reviews)
+        feedback_indicators = [
+            "feedback", "responses", "response count", "survey", "reviews", "ratings",
+            "nps", "csat", "net promoter", "star rating", "stars"
+        ]
+        # Require at least two indicators to avoid false positives
+        if sum(1 for k in feedback_indicators if k in text_lower) >= 2:
+            return "Bulk Feedback Analysis"
         
         # Check for financial indicators first (more specific)
         financial_keywords = ["balance sheet", "income statement", "cash flow statement", "financial statements", "ebitda", "profit and loss", "p&l"]
@@ -198,6 +207,42 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
         )
     
     analysis_prompts = {
+        "Bulk Feedback Analysis": """You are analyzing a very large volume of customer feedback (thousands to lakhs of entries). Produce a concise, decision-ready report with quantified insights and a personalized plan.
+
+        ## 🎯 EXECUTIVE SUMMARY (3-5 sentences)
+        - What customers overall feel and the top 3 themes by volume
+        - Key risks and immediate wins
+        - One-line north star recommendation
+
+        ## ✅ PROS (Top Positive Themes)
+        - 6-10 bullets grouped by theme
+        - Include approximate share (e.g., ~22%) or count when signals repeat
+        - Add 1 short representative quote per theme (if present)
+
+        ## ❌ CONS (Top Negative Themes)
+        - 6-10 bullets grouped by theme
+        - Include approximate share/count and impact
+        - Add 1 short representative quote per theme (if present)
+        - Call out minority but high-severity issues
+
+        ## 🚀 IMMEDIATE ACTIONS (Next 30 Days)
+        - 6-8 highly specific tasks with owners, effort (S/M/L), and success metric
+        - Prioritize by impact x effort
+
+        ## 📈 3-6 MONTH GROWTH PLAN
+        - 6-8 initiatives with expected outcome, metric target, and milestone
+        - Include experimentation plan (A/Bs) for top themes
+
+        ## 🎯 PERSONALIZED RECOMMENDATIONS
+        - Tailor to any detected context (company name, industry, region, audience, product tier)
+        - Mention relevant regulations or market nuances if detectable
+        - Provide KPI targets (CSAT/NPS/Churn/Activation) and tracking cadence
+
+        Rules:
+        - Use only evidence present in the document; mark missing data as "Not found".
+        - Prefer headings (##) and list bullets (-); bold short labels where useful.
+        - Do not invent exact numbers; use approximate shares when clear from repetition.
+        """,
         "Google Forms Feedback": """Analyze this customer feedback and provide strategic business insights with clear pros, cons, and action plans:
 
         ## 🎯 EXECUTIVE SUMMARY
@@ -770,6 +815,42 @@ def analyze_startup_document(text: str, document_type: str = "Auto-Detect") -> D
     def get_fallback_analysis(doc_type: str, content: str) -> str:
         """Provide template-based analysis when AI API is unavailable"""
         
+        if doc_type == "Bulk Feedback Analysis":
+            return f"""
+# Bulk Feedback Analysis Report
+
+## EXECUTIVE SUMMARY
+- High-level synthesis of major themes across large-scale feedback
+- Top positives and negatives with immediate focus areas
+- North star recommendation for the next 90 days
+
+## PROS (Top Themes)
+- Theme A (~x%): Representative quote
+- Theme B (~x%): Representative quote
+- Theme C (~x%): Representative quote
+
+## CONS (Top Themes)
+- Theme D (~x%): Representative quote
+- Theme E (~x%): Representative quote
+- Theme F (~x%): Representative quote
+
+## IMMEDIATE ACTIONS (Next 30 Days)
+- Action 1: Owner, Effort (S/M/L), Metric
+- Action 2: Owner, Effort (S/M/L), Metric
+- Action 3: Owner, Effort (S/M/L), Metric
+
+## 3-6 MONTH GROWTH PLAN
+- Initiative 1: Expected outcome, target metric, milestone
+- Initiative 2: Expected outcome, target metric, milestone
+- Initiative 3: Expected outcome, target metric, milestone
+
+## PERSONALIZED RECOMMENDATIONS
+- Tailored to detected company/context details
+- KPI targets and tracking cadence
+
+Note: This is a template outline. For AI-powered, quantified insights, ensure API availability.
+"""
+
         if doc_type == "Google Forms Feedback":
             return f"""
 # Google Forms Analysis Report
