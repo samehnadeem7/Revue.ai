@@ -1321,9 +1321,16 @@ async def health_check():
         # Test database connection
         conn = get_db_connection()
         conn.close()
+        
+        # Check API key status
+        api_key = os.getenv("GOOGLE_API_KEY")
+        api_status = "configured" if api_key and api_key != "your-actual-google-api-key-here" else "missing"
+        
         return {
             "status": "healthy",
             "database": "connected",
+            "google_api": api_status,
+            "api_key_length": len(api_key) if api_key else 0,
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
@@ -1332,7 +1339,7 @@ async def health_check():
             "database": "disconnected",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
-    }
+        }
 
 @app.get("/analytics/")
 async def get_analytics():
